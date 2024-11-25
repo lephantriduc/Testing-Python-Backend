@@ -12,7 +12,7 @@ def _get_folder_tree(path: str) -> dict:
         "name": <path>,
         "ext": ".",
         "children": [
-            { "name": "file.py",  "ext": ".py", },
+            { "name": "file.py",  "ext": ".py"  },
             { "name": "file.png", "ext": ".png" },
             { "name": "folder",   "ext": ".", "children": [] }
         ]
