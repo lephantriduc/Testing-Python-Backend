@@ -48,7 +48,7 @@ async def upload_zip_file(file: UploadFile):
 
         with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
             zip_ref.extractall(extract_path)
-    except zipfile.BadZipFile:
+    except (zipfile.BadZipFile, RuntimeError):
         os.remove(temp_zip_path)
         raise HTTPException(status_code=400, detail="Invalid zip file")
     finally:
@@ -56,7 +56,10 @@ async def upload_zip_file(file: UploadFile):
         if os.path.exists(temp_zip_path):
             os.remove(temp_zip_path)
 
-    return { "message": f"File extracted to {extract_path}" } | await get_structure(folder_name)
+    return {
+        "message": f"File extracted to {extract_path}",
+        "folder_tree": await get_structure(folder_name)
+    }
 
 
 @app.post("/get_structure/")
@@ -64,7 +67,7 @@ async def get_structure(repo_name: str):
     target_path = os.path.join(UPLOAD_FOLDER, repo_name)
     if not os.path.exists(target_path):
         raise HTTPException(status_code=404, detail="Repo not found")
-    return { "folder_tree": get_full_structure(target_path) }
+    return get_full_structure(target_path)
 
 
 @app.get("/get_file/")
@@ -72,11 +75,9 @@ async def get_file(repo_name: str, file_name: str):
     folder_path = os.path.join(UPLOAD_FOLDER, repo_name)
     file_path = os.path.join(folder_path, file_name)
 
-    # Check if the folder exists
     if not os.path.exists(folder_path) or not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="Folder not found")
 
-    # Serve the file
     return FileResponse(file_path, media_type="application/octet-stream", filename=file_name)
 
 
