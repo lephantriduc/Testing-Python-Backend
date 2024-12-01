@@ -36,17 +36,44 @@ Raise an `HTTPException(400)` if:
 Example JSON response:
 ```
 {
-    return {
-        "message": f"File extracted to {extract_path}",
-        "folder_tree": {
-            "name": <root_folder>,
-            "ext": ".",
-            "children": [
-                { "name": "file_1.py", "ext": ".py" },
-                { "name": "file_2.py", "ext": ".png" },
-                { "name": "another_folder", "ext": ".", "children": [...] },
-                ...
-            ]
+    "message": f"File extracted to {extract_path}",
+    "folder_tree": {
+        "name": <root_folder>,
+        "ext": ".",
+        "children": [
+            { "name": "file_1.png", "ext": ".png", "children": [] },
+            { "name": "another_folder", "ext": ".", "children": [...] },
+            { "name": "file_2.png", "ext": ".py", "children": {...} }
+        ]
+    }
+}
+```
+
+Note that children of a `.py` file is a **dictionary** (different from one of a folder).
+
+Example of a `.py` file children:
+```
+{
+    "func_1": {
+        "id": "123",
+        "type": "function",
+        "first": 1,
+        "last": 6,
+        "children": {},
+    },
+    "class_2": {
+        "id": "456",
+        "type": "class",
+        "first": 7,
+        "last": 10,
+        "children": {
+            "__init__": {
+                "id": "789",
+                "type": "class:method",
+                "first": 8,
+                "last": 10,
+                "children": {}
+            }
         }
     }
 }
