@@ -1,5 +1,9 @@
 import os
+import asyncio
 import zipfile
+import secrets
+import shutil
+from pathlib import Path, PurePosixPath
 
 from typing import Annotated
 from fastapi import HTTPException
@@ -22,16 +26,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Testing-Python-Backend!"}
 
 
-@app.post("/upload_zip/")
+@app.post("/upload_zip")
 async def upload_zip_file(file: UploadFile):
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a .zip file")
-    
+
     # Ensure the upload directory exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -42,8 +47,9 @@ async def upload_zip_file(file: UploadFile):
 
     try:
         # Extract the zip file to a folder named after the file (without .zip)
+        request_id = secrets.token_hex(16)
         folder_name = os.path.splitext(file.filename)[0]
-        extract_path = os.path.join(UPLOAD_FOLDER, folder_name)
+        extract_path = os.path.join(UPLOAD_FOLDER, request_id, folder_name)
         os.makedirs(extract_path, exist_ok=True)
 
         with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
@@ -58,17 +64,18 @@ async def upload_zip_file(file: UploadFile):
 
     return {
         "message": f"File extracted to {extract_path}",
-        "folder_tree": await get_structure(folder_name)
+        # "folder_tree": await get_structure(folder_name, request_id),
+        "request_id": request_id,
     }
 
 
-@app.post("/get_structure/")
-async def get_structure(repo_name: str):
-    target_path = os.path.join(UPLOAD_FOLDER, repo_name)
-    if not os.path.exists(target_path):
-        raise HTTPException(status_code=404, detail="Repo not found")
-    return get_full_structure(target_path)
-
+# @app.post("/get_structure/")
+# async def get_structure(repo_name: str, request_id: str):
+#     target_path = os.path.join(UPLOAD_FOLDER, request_id, repo_name)
+#     if not os.path.exists(target_path):
+#         raise HTTPException(status_code=404, detail="Repo not found")
+#     return get_full_structure(target_path)
+#
 
 @app.get("/get_file/")
 async def get_file(repo_name: str, file_name: str):
@@ -112,3 +119,37 @@ async def parse_files(files: list[UploadFile]):
         result.append({"filename": file.filename, "parsed_data": parsed_data})
 
     return {"parsed_files": result}
+
+
+@app.post("/generate-unit-tests")
+async def generate_unit_tests(request_id: str):
+    # TODO: Validate request_id
+    # TODO: Test result's folder structure must match the  folder structure
+
+    p = Path(f"uploads/{request_id}")
+    # The full path
+    file_paths = list(p.glob("**/*.py"))
+
+    # Pair the project paths and the files' names
+    paths_and_names = [(path.parent, path.stem) for path in file_paths]
+
+    # Iterate through each .py file and call (")> pynguin for help generating tests
+    for project_path, filename in paths_and_names:
+        pynguin_cmd = f"pynguin --project-path {project_path} --output-path ./test-results/{request_id} --module-name {filename} -v"
+        process = await asyncio.create_subprocess_shell(
+            pynguin_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        stdout, stderr = await process.communicate()
+        print(f'[{pynguin_cmd!r} exited with {process.returncode}]')
+        if stdout:
+            print(f'[stdout]\n{stdout.decode()}')
+        if stderr:
+            print(f'[stderr]\n{stderr.decode()}')
+
+    archived_file = shutil.make_archive('zipped_file', 'zip', f'test-results/{request_id}')
+
+    headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
+    return FileResponse(archived_file, headers=headers, media_type="application/zip")
