@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 
 from typing import Annotated
@@ -44,7 +45,9 @@ async def upload_zip_file(file: UploadFile):
         # Extract the zip file to a folder named after the file (without .zip)
         folder_name = os.path.splitext(file.filename)[0]
         extract_path = os.path.join(UPLOAD_FOLDER, folder_name)
-        os.makedirs(extract_path, exist_ok=True)
+        if os.path.exists(extract_path):
+            shutil.rmtree(extract_path)
+        os.makedirs(extract_path)
 
         with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
             zip_ref.extractall(extract_path)
