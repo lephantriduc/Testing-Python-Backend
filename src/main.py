@@ -1,5 +1,6 @@
 import os
 import asyncio
+import shutil
 import zipfile
 import secrets
 import shutil
@@ -49,7 +50,9 @@ async def upload_zip_file(file: UploadFile):
         # Extract the zip file to a folder named after the file (without .zip)
         folder_name = os.path.splitext(file.filename)[0]
         extract_path = os.path.join(UPLOAD_FOLDER, folder_name)
-        os.makedirs(extract_path, exist_ok=True)
+        if os.path.exists(extract_path):
+            shutil.rmtree(extract_path)
+        os.makedirs(extract_path)
 
         with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
             zip_ref.extractall(extract_path)
@@ -122,8 +125,6 @@ async def parse_files(files: list[UploadFile]):
 @app.post("/generate-unit-tests/")
 async def generate_unit_tests():
     p = Path("uploads/")
-    # if not p.is_dir():
-    #     raise HTTPException(status_code=404, detail="Request ID not found on server.")
 
     # The full path
     file_paths = list(p.glob("**/*.py"))
