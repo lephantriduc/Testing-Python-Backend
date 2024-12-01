@@ -43,41 +43,40 @@ Example JSON response:
         "children": [
             { "name": "file_1.png", "ext": ".png", "children": [] },
             { "name": "another_folder", "ext": ".", "children": [...] },
-            { "name": "file_2.png", "ext": ".py", "children": {...} }
+            {
+                "name": "file_2.png",
+                "ext": ".py",
+                "children": {
+                    "func_1": {
+                        "id": "123",
+                        "type": "function",
+                        "first": 1,
+                        "last": 6,
+                        "children": {},
+                    },
+                    "class_2": {
+                        "id": "456",
+                        "type": "class",
+                        "first": 7,
+                        "last": 10,
+                        "children": {
+                            "__init__": {
+                                "id": "789",
+                                "type": "class:method",
+                                "first": 8,
+                                "last": 10,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            }
         ]
     }
 }
 ```
 
-Note that children of a `.py` file is a **dictionary** (different from one of a folder).
-
-Example of a `.py` file children:
-```
-{
-    "func_1": {
-        "id": "123",
-        "type": "function",
-        "first": 1,
-        "last": 6,
-        "children": {},
-    },
-    "class_2": {
-        "id": "456",
-        "type": "class",
-        "first": 7,
-        "last": 10,
-        "children": {
-            "__init__": {
-                "id": "789",
-                "type": "class:method",
-                "first": 8,
-                "last": 10,
-                "children": {}
-            }
-        }
-    }
-}
-```
+> **NOTE** that a `.py` file has its own structure (dictionary) to reach all of its internal classes, methods and functions!
 
 ### /get_structure/
 Get folder_tree from a repo (required to be uploaded as zip before).
