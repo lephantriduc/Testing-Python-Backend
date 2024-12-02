@@ -1,3 +1,3 @@
 import uvicorn
 
-uvicorn.run('src.main:app', reload=True)
+uvicorn.run('src.main:app')

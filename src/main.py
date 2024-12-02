@@ -3,7 +3,7 @@ import asyncio
 import zipfile
 import secrets
 import shutil
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath
 
 from typing import Annotated
 from fastapi import HTTPException
@@ -124,21 +124,18 @@ async def parse_files(files: list[UploadFile]):
 @app.post("/generate-unit-tests/")
 async def generate_unit_tests(request_id: str):
     p = Path(f"uploads/{request_id}")
-    # TODO: Validate request_id
     if not p.is_dir():
         raise HTTPException(status_code=404, detail="Request ID not found on server.")
-
-    # TODO: Test result's folder structure must match the folder structure
 
     # The full path
     file_paths = list(p.glob("**/*.py"))
 
     # Pair the project paths and the files' names
-    paths_and_names = [(path.parent, path.stem) for path in file_paths]
+    paths_and_names = [(path.parent, path.relative_to('uploads/').parent, path.stem) for path in file_paths]
 
     # Iterate through each .py file and call (")> pynguin for help generating tests
-    for project_path, filename in paths_and_names:
-        pynguin_cmd = f"pynguin --project-path {project_path} --output-path ./test-results/{request_id} --module-name {filename} -v"
+    for project_path, output_path, filename in paths_and_names:
+        pynguin_cmd = f"pynguin --project-path {project_path} --output-path ./test-results/{output_path} --module-name {filename}"
         process = await asyncio.create_subprocess_shell(
             pynguin_cmd,
             stdout=asyncio.subprocess.PIPE,
