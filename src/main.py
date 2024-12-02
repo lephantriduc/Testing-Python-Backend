@@ -1,6 +1,11 @@
 import os
+import asyncio
 import shutil
 import zipfile
+import secrets
+import shutil
+import hashlib
+from pathlib import Path
 
 from typing import Annotated
 from fastapi import HTTPException
@@ -14,6 +19,7 @@ from src.parse2 import get_full_structure
 app = FastAPI()
 
 UPLOAD_FOLDER = "./uploads"
+TEST_RESULT_FOLDER = "./test-results"
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,6 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 async def root():
@@ -32,7 +39,7 @@ async def root():
 async def upload_zip_file(file: UploadFile):
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a .zip file")
-    
+
     # Ensure the upload directory exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -61,7 +68,7 @@ async def upload_zip_file(file: UploadFile):
 
     return {
         "message": f"File extracted to {extract_path}",
-        "folder_tree": await get_structure(folder_name)
+        "folder_tree": await get_structure(folder_name),
     }
 
 
@@ -71,7 +78,7 @@ async def get_structure(repo_name: str):
     if not os.path.exists(target_path):
         raise HTTPException(status_code=404, detail="Repo not found")
     return get_full_structure(target_path)
-
+#
 
 @app.get("/get_file/")
 async def get_file(repo_name: str, file_name: str):
@@ -115,3 +122,59 @@ async def parse_files(files: list[UploadFile]):
         result.append({"filename": file.filename, "parsed_data": parsed_data})
 
     return {"parsed_files": result}
+
+
+@app.post("/generate-unit-tests/")
+async def generate_unit_tests(repo_name: str):
+    project_path = os.path.join(UPLOAD_FOLDER, repo_name)
+    project_test = os.path.join(TEST_RESULT_FOLDER, repo_name)
+
+    file_paths = list(map(str, Path(project_path).glob("**/*.py")))
+    
+    module_names = [
+        os.path.relpath(file, project_path)
+        for file in file_paths
+        for file, _ in [os.path.splitext(file)]
+    ]
+    try:
+        for module_name in module_names:
+            if module_name.endswith('__init__'): continue
+
+            output_path = os.path.join(
+                project_test,
+                os.path.dirname(module_name)
+            )
+
+            module_name = module_name.replace('/', '.')
+            
+            pynguin_cmd = f"""pynguin \
+                --project-path {project_path} \
+                --output-path {output_path} \
+                --module-name {module_name} \
+                --maximum-search-time 5 \
+                --seed 13022004 \
+                --assertion-generation SIMPLE
+            """
+            process = await asyncio.create_subprocess_shell(
+                pynguin_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+
+            stdout, stderr = await process.communicate()
+            print(f'Running `pynguin` on `{module_name}` exited with {process.returncode}')
+            if process.returncode != 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Pynguin failed for module `{module_name}`:\n{stdout.decode().strip()}"
+                )
+
+        zip_name = hashlib.sha256(project_path.encode()).hexdigest()
+        input_path = os.path.join(TEST_RESULT_FOLDER, repo_name)
+        output_path = os.path.join(TEST_RESULT_FOLDER, zip_name)
+        archived_file = shutil.make_archive(output_path, 'zip', input_path)
+    finally:
+        shutil.rmtree(input_path)
+
+    headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
+    return FileResponse(archived_file, headers=headers, media_type="application/zip")
