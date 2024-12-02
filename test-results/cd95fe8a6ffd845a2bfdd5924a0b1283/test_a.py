@@ -5,47 +5,51 @@ import a as module_0
 
 
 def test_case_0():
-    bool_0 = False
-    var_0 = module_0.do_something(bool_0)
-    assert var_0 == pytest.approx(0.0, abs=0.01, rel=0.01)
-
-
-def test_case_1():
-    float_0 = -2874.398871
-    var_0 = module_0.do_something(float_0)
-    assert var_0 == pytest.approx(-8622.196613, abs=0.01, rel=0.01)
-    var_1 = module_0.do_something_else(var_0)
-    assert var_1 == pytest.approx(-8622.196613, abs=0.01, rel=0.01)
-
-
-@pytest.mark.xfail(strict=True)
-def test_case_2():
-    int_0 = -3246
-    bool_0 = False
-    bool_1 = False
-    var_0 = module_0.do_something_else(bool_1)
-    tuple_0 = (int_0, bool_0, bool_1, int_0)
-    module_0.do_something(tuple_0)
-
-
-def test_case_3():
-    int_0 = -514
-    tuple_0 = module_0.do_something_else(int_0)
-    assert tuple_0 == -514
-    var_0 = module_0.do_something_else(tuple_0)
-    assert var_0 == -514
-
-
-@pytest.mark.xfail(strict=True)
-def test_case_4():
-    bytes_0 = b"\x19\xae\xdb\xa7\xd2Q"
-    module_0.do_something_else(bytes_0)
-
-
-@pytest.mark.xfail(strict=True)
-def test_case_5():
     bool_0 = True
     var_0 = module_0.do_something_else(bool_0)
     assert var_0 is True
-    set_0 = {bool_0, bool_0, var_0, var_0}
-    module_0.do_something_else(set_0)
+    bool_1 = False
+    var_1 = module_0.do_something(bool_1)
+    assert var_1 == pytest.approx(0.0, abs=0.01, rel=0.01)
+    var_2 = module_0.do_something_else(bool_1)
+
+
+@pytest.mark.xfail(strict=True)
+def test_case_1():
+    float_0 = 2289.1228
+    var_0 = module_0.do_something_else(float_0)
+    assert var_0 == pytest.approx(2289.1228, abs=0.01, rel=0.01)
+    var_1 = module_0.do_something_else(float_0)
+    assert var_1 == pytest.approx(2289.1228, abs=0.01, rel=0.01)
+    int_0 = -1541
+    var_2 = module_0.do_something(var_1)
+    assert var_2 == pytest.approx(6868.3684, abs=0.01, rel=0.01)
+    var_3 = module_0.do_something(int_0)
+    assert var_3 == -4622
+    bytes_0 = b"\xa1\x19\x13\x9d\xcc"
+    bool_0 = False
+    var_4 = module_0.do_something(bool_0)
+    assert var_4 == pytest.approx(0.0, abs=0.01, rel=0.01)
+    var_5 = module_0.do_something(bool_0)
+    assert var_5 == pytest.approx(0.0, abs=0.01, rel=0.01)
+    var_6 = module_0.do_something(var_5)
+    assert var_6 == pytest.approx(0.0, abs=0.01, rel=0.01)
+    var_7 = module_0.do_something(var_3)
+    assert var_7 == pytest.approx(-2311.0, abs=0.01, rel=0.01)
+    list_0 = [int_0, int_0, bytes_0, bool_0]
+    var_8 = module_0.do_something_else(var_5)
+    assert var_8 == pytest.approx(0.0, abs=0.01, rel=0.01)
+    var_9 = module_0.do_something_else(int_0)
+    assert var_9 == -1541
+    module_0.do_something_else(list_0)
+
+
+def test_case_2():
+    bool_0 = False
+    var_0 = module_0.do_something_else(bool_0)
+
+
+@pytest.mark.xfail(strict=True)
+def test_case_3():
+    str_0 = "D5#Ux`%lEd6GL5g`b"
+    module_0.do_something_else(str_0)

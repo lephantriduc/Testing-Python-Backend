@@ -32,7 +32,7 @@ async def root():
     return {"message": "Welcome to Testing-Python-Backend!"}
 
 
-@app.post("/upload_zip")
+@app.post("/upload_zip/")
 async def upload_zip_file(file: UploadFile):
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a .zip file")
@@ -121,12 +121,15 @@ async def parse_files(files: list[UploadFile]):
     return {"parsed_files": result}
 
 
-@app.post("/generate-unit-tests")
+@app.post("/generate-unit-tests/")
 async def generate_unit_tests(request_id: str):
-    # TODO: Validate request_id
-    # TODO: Test result's folder structure must match the  folder structure
-
     p = Path(f"uploads/{request_id}")
+    # TODO: Validate request_id
+    if not p.is_dir():
+        raise HTTPException(status_code=404, detail="Request ID not found on server.")
+
+    # TODO: Test result's folder structure must match the folder structure
+
     # The full path
     file_paths = list(p.glob("**/*.py"))
 
