@@ -47,9 +47,8 @@ async def upload_zip_file(file: UploadFile):
 
     try:
         # Extract the zip file to a folder named after the file (without .zip)
-        request_id = secrets.token_hex(16)
         folder_name = os.path.splitext(file.filename)[0]
-        extract_path = os.path.join(UPLOAD_FOLDER, request_id, folder_name)
+        extract_path = os.path.join(UPLOAD_FOLDER, folder_name)
         os.makedirs(extract_path, exist_ok=True)
 
         with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
@@ -64,17 +63,16 @@ async def upload_zip_file(file: UploadFile):
 
     return {
         "message": f"File extracted to {extract_path}",
-        # "folder_tree": await get_structure(folder_name, request_id),
-        "request_id": request_id,
+        "folder_tree": await get_structure(folder_name),
     }
 
 
-# @app.post("/get_structure/")
-# async def get_structure(repo_name: str, request_id: str):
-#     target_path = os.path.join(UPLOAD_FOLDER, request_id, repo_name)
-#     if not os.path.exists(target_path):
-#         raise HTTPException(status_code=404, detail="Repo not found")
-#     return get_full_structure(target_path)
+@app.post("/get_structure/")
+async def get_structure(repo_name: str):
+    target_path = os.path.join(UPLOAD_FOLDER, repo_name)
+    if not os.path.exists(target_path):
+        raise HTTPException(status_code=404, detail="Repo not found")
+    return get_full_structure(target_path)
 #
 
 @app.get("/get_file/")
@@ -122,10 +120,10 @@ async def parse_files(files: list[UploadFile]):
 
 
 @app.post("/generate-unit-tests/")
-async def generate_unit_tests(request_id: str):
-    p = Path(f"uploads/{request_id}")
-    if not p.is_dir():
-        raise HTTPException(status_code=404, detail="Request ID not found on server.")
+async def generate_unit_tests():
+    p = Path("uploads/")
+    # if not p.is_dir():
+    #     raise HTTPException(status_code=404, detail="Request ID not found on server.")
 
     # The full path
     file_paths = list(p.glob("**/*.py"))
@@ -149,7 +147,7 @@ async def generate_unit_tests(request_id: str):
         if stderr:
             print(f'[stderr]\n{stderr.decode()}')
 
-    archived_file = shutil.make_archive('zipped_file', 'zip', f'test-results/{request_id}')
+    archived_file = shutil.make_archive('zipped_file', 'zip', 'test-results')
 
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
