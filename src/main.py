@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import secrets
 import shutil
+import hashlib
 from pathlib import Path, PurePath
 
 from typing import Annotated
@@ -18,6 +19,7 @@ from src.parse2 import get_full_structure
 app = FastAPI()
 
 UPLOAD_FOLDER = "./uploads"
+TEST_RESULT_FOLDER = "./test-results"
 
 app.add_middleware(
     CORSMiddleware,
@@ -123,32 +125,56 @@ async def parse_files(files: list[UploadFile]):
 
 
 @app.post("/generate-unit-tests/")
-async def generate_unit_tests():
-    p = Path("uploads/")
+async def generate_unit_tests(repo_name: str):
+    project_path = os.path.join(UPLOAD_FOLDER, repo_name)
+    project_test = os.path.join(TEST_RESULT_FOLDER, repo_name)
 
-    # The full path
-    file_paths = list(p.glob("**/*.py"))
+    file_paths = list(map(str, Path(project_path).glob("**/*.py")))
+    
+    module_names = [
+        os.path.relpath(file, project_path)
+        for file in file_paths
+        for file, _ in [os.path.splitext(file)]
+    ]
+    try:
+        for module_name in module_names:
+            if module_name.endswith('__init__'): continue
 
-    # Pair the project paths and the files' names
-    paths_and_names = [(path.parent, path.relative_to('uploads/').parent, path.stem) for path in file_paths]
+            output_path = os.path.join(
+                project_test,
+                os.path.dirname(module_name)
+            )
 
-    # Iterate through each .py file and call (")> pynguin for help generating tests
-    for project_path, output_path, filename in paths_and_names:
-        pynguin_cmd = f"pynguin --project-path {project_path} --output-path ./test-results/{output_path} --module-name {filename}"
-        process = await asyncio.create_subprocess_shell(
-            pynguin_cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+            module_name = module_name.replace('/', '.')
+            
+            pynguin_cmd = f"""pynguin \
+                --project-path {project_path} \
+                --output-path {output_path} \
+                --module-name {module_name} \
+                --maximum-search-time 5 \
+                --seed 13022004 \
+                --assertion-generation SIMPLE
+            """
+            process = await asyncio.create_subprocess_shell(
+                pynguin_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
 
-        stdout, stderr = await process.communicate()
-        print(f'[{pynguin_cmd!r} exited with {process.returncode}]')
-        if stdout:
-            print(f'[stdout]\n{stdout.decode()}')
-        if stderr:
-            print(f'[stderr]\n{stderr.decode()}')
+            stdout, stderr = await process.communicate()
+            print(f'Running `pynguin` on `{module_name}` exited with {process.returncode}')
+            if process.returncode != 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Pynguin failed for module `{module_name}`:\n{stdout.decode().strip()}"
+                )
 
-    archived_file = shutil.make_archive('zipped_file', 'zip', 'test-results')
+        zip_name = hashlib.sha256(project_path.encode()).hexdigest()
+        input_path = os.path.join(TEST_RESULT_FOLDER, repo_name)
+        output_path = os.path.join(TEST_RESULT_FOLDER, zip_name)
+        archived_file = shutil.make_archive(output_path, 'zip', input_path)
+    finally:
+        shutil.rmtree(input_path)
 
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
