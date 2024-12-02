@@ -13,8 +13,7 @@ from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.parse import parse
-from src.parse2 import get_full_structure
+from src.parse import get_full_structure
 
 app = FastAPI()
 
@@ -105,25 +104,6 @@ async def create_upload_files(files: list[UploadFile]):
     return {"files": res}
     # return {"filenames": [file.filename for file in files]}
 
-
-@app.post("/parse/")
-async def parse_file(file: UploadFile):
-    code = await file.read()
-    parsed_data = parse(code)
-    return {"parsed_data": parsed_data}
-
-
-@app.post("/parsefiles/")
-async def parse_files(files: list[UploadFile]):
-    result = []
-    for file in files:
-        code = await file.read()
-        parsed_data = parse(code)
-        result.append({"filename": file.filename, "parsed_data": parsed_data})
-
-    return {"parsed_files": result}
-
-
 @app.post("/generate-unit-tests/")
 async def generate_unit_tests(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
@@ -169,12 +149,10 @@ async def generate_unit_tests(repo_name: str):
                     detail=f"Pynguin failed for module `{module_name}`:\n{stdout.decode().strip()}"
                 )
 
-        zip_name = hashlib.sha256(project_path.encode()).hexdigest()
-        input_path = os.path.join(TEST_RESULT_FOLDER, repo_name)
-        output_path = os.path.join(TEST_RESULT_FOLDER, zip_name)
-        archived_file = shutil.make_archive(output_path, 'zip', input_path)
+        path = os.path.join(TEST_RESULT_FOLDER, repo_name)
+        archived_file = shutil.make_archive(path, 'zip', path)
     finally:
-        shutil.rmtree(input_path)
+        shutil.rmtree(project_path)
 
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
