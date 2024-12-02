@@ -29,6 +29,8 @@ fastapi run src/main.py
 ### /upload_zip/
 Upload a zip file to server.
 
+Input: the `.zip` file itself.
+
 Raise an `HTTPException(400)` if:
 - File extension isn't `.zip`
 - Cannot extract with `zipfile` library. Probably corrupted content or the file is encrypted with password.
@@ -79,7 +81,9 @@ Example JSON response:
 > **NOTE** that a `.py` file has its own structure (dictionary) to reach all of its internal classes, methods and functions!
 
 ### /get_structure/
-Get folder_tree from a repo (required to be uploaded as zip before).
+Get folder_tree from a repo (required to be uploaded as zip in advance).
+
+Input: `repo_name` as a string.
 
 Raise an `HTTPException(404)` if not found.
 
@@ -88,6 +92,21 @@ JSON Response: the same as `folder_tree` in `/upload_zip/` response.
 ### /get_file/
 Get a file from a repo (required to be uploaded as zip before).
 
+Input: `repo_name` and `file_name` as strings.
+
 Raise an `HTTPException(404)` if not found.
 
 Return value is the file itself (`FileResponse`).
+
+### /generate_unit_tests/
+Automatically generate unit tests for a repo.
+
+> **NOTE** that this is just a temporary test generation method and will be deprecated soon. 
+
+Input: `repo_name` as a string.
+
+Raise an:
+- `HTTPException(404)` if repo cannot be found.
+- `HTTPException(400)` if Pynguin failed to generate tests (usually because of syntax error).
+
+Return value is the zip file containing the generated tests.

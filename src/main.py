@@ -86,7 +86,7 @@ async def get_file(repo_name: str, file_name: str):
     file_path = os.path.join(folder_path, file_name)
 
     if not os.path.exists(folder_path) or not os.path.isfile(file_path):
-        raise HTTPException(status_code=404, detail="Folder not found")
+        raise HTTPException(status_code=404, detail="File or folder not found")
 
     return FileResponse(file_path, media_type="application/octet-stream", filename=file_name)
 
@@ -129,6 +129,9 @@ async def generate_unit_tests(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
     project_test = os.path.join(TEST_RESULT_FOLDER, repo_name)
 
+    if not os.path.exists(project_path):
+        raise HTTPException(status_code=404, detail="Folder not found")
+
     file_paths = list(map(str, Path(project_path).glob("**/*.py")))
     
     module_names = [
@@ -151,7 +154,7 @@ async def generate_unit_tests(repo_name: str):
                 --project-path {project_path} \
                 --output-path {output_path} \
                 --module-name {module_name} \
-                --maximum-search-time 5 \
+                --maximum-search-time 10 \
                 --seed 13022004 \
                 --assertion-generation SIMPLE
             """
