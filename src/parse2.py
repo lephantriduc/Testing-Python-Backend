@@ -2,6 +2,7 @@ import os
 import hashlib
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
+from scalpel.import_graph.import_graph import ImportGraph, Tree
 
 
 def _get_folder_tree(path: str) -> dict:
@@ -158,3 +159,26 @@ def get_full_structure(path: str):
     res = _get_folder_tree(path)
     _include_pyfile_children(path, res, path)
     return res
+
+
+def dependency_analysis(file_paths: list[str], package: str):
+    # Get call edges
+    cg_generator = CallGraphGenerator(file_paths, package)
+    cg_generator.analyze()
+    call_edges: list[list[str, str]] = cg_generator.output_edges()
+
+    # Get import edges
+    import_graph = ImportGraph(package)
+    import_graph.build_dir_tree()
+    import_edges: list[list[str, str]] = []
+    for node in import_graph.get_leaf_nodes():
+        this_module = node.prefix
+        if this_module.endswith('__init__.py'): continue
+        module_dict = import_graph.parse_import(node.ast)
+        for imported_module, imported_nodes in module_dict.items():
+            import_edges.extend([
+                [this_module, f"{imported_module}.{imported_node}"]
+                for imported_node in imported_nodes
+            ])
+
+    return call_edges, import_edges

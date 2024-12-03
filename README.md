@@ -110,3 +110,23 @@ Raise an:
 - `HTTPException(400)` if Pynguin failed to generate tests (usually because of syntax error).
 
 Return value is the zip file containing the generated tests.
+
+### /dependency_analysis/
+Generate dependencies edges that files from a repo emit.
+
+Input: `repo_name` as a string.
+
+Raise an `HTTPException(404)` if repo cannot be found.
+
+JSON response:
+```
+{
+    "call_edges": [
+        [ node_1, node_2 ],
+        [ node_3, node_4 ]
+    ],
+    "import_edges": [
+        [ node_5, node_6 ]
+    ]
+}
+```

@@ -14,7 +14,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.parse import parse
-from src.parse2 import get_full_structure
+from src.parse2 import get_full_structure, dependency_analysis
 
 app = FastAPI()
 
@@ -72,13 +72,26 @@ async def upload_zip_file(file: UploadFile):
     }
 
 
-@app.post("/get_structure/")
+@app.get("/get_structure/")
 async def get_structure(repo_name: str):
     target_path = os.path.join(UPLOAD_FOLDER, repo_name)
     if not os.path.exists(target_path):
         raise HTTPException(status_code=404, detail="Repo not found")
     return get_full_structure(target_path)
-#
+
+
+@app.get("/dependency_analysis/")
+async def get_dependency_edges(repo_name: str):
+    project_path = os.path.join(UPLOAD_FOLDER, repo_name)
+
+    if not os.path.exists(project_path):
+        raise HTTPException(status_code=404, detail="Folder not found")
+
+    file_paths = list(map(str, Path(project_path).glob("**/*.py")))
+
+    call_edges, import_edges = dependency_analysis(file_paths, project_path)
+    return { 'call_edges': call_edges, 'import_edges': import_edges }
+    
 
 @app.get("/get_file/")
 async def get_file(repo_name: str, file_name: str):
@@ -124,7 +137,7 @@ async def parse_files(files: list[UploadFile]):
     return {"parsed_files": result}
 
 
-@app.post("/generate-unit-tests/")
+@app.get("/generate-unit-tests/")
 async def generate_unit_tests(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
     project_test = os.path.join(TEST_RESULT_FOLDER, repo_name)
