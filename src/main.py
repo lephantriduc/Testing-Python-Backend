@@ -103,22 +103,6 @@ async def get_file(repo_name: str, file_name: str):
 
     return FileResponse(file_path, media_type="application/octet-stream", filename=file_name)
 
-
-@app.post("/files/")
-async def create_file(file: Annotated[bytes, File()]):
-    return {"file_size": len(file)}
-
-
-@app.post("/uploadfiles/")
-async def create_upload_files(files: list[UploadFile]):
-    res = []
-    for file in files:
-        res.append({"file_name": file.filename, "file_size": file.size})
-
-    return {"files": res}
-    # return {"filenames": [file.filename for file in files]}
-
-
 @app.get("/generate-unit-tests/")
 async def generate_unit_tests(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
