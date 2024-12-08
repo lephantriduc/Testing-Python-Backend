@@ -132,3 +132,25 @@ JSON response:
 ```
 
 ### /get-randomized-inputs/
+Generate a random values for parameters of a specified function based on their types.  
+
+> **NOTE** that this is also temporary and will be deprecated soon.
+
+Input: `repo_name` and `function_id` as strings.
+
+Raise an:
+- `HTTPException(404)` if repo cannot be found.
+- `HTTPException(422)` if function's id cannot be found in specified repo.
+
+JSON response:
+```
+{
+  "file_name": "some_file_name.py",
+  "randomized_inputs": {
+    "parameter_1": 43838,
+    "parameter_2": -2851,
+    "parameter_3": 382.984651032,
+    "parameter_4": sjJSFkdljslaWQ
+  }
+}
+```
