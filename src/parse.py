@@ -1,8 +1,11 @@
 import os
 import hashlib
+from typing import List
+
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
 from scalpel.import_graph.import_graph import ImportGraph, Tree
+from scalpel.typeinfer.typeinfer import TypeInference
 
 
 def _get_folder_tree(path: str) -> dict:
@@ -79,12 +82,12 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
     }
     ```
     '''
-    
+
     cg_generator = CallGraphGenerator([file], package)
     cg_generator.analyze()
 
     # exclude package from file name
-    name = file[len(package)+1:]
+    name = file[len(package) + 1:]
 
     # exclude extension
     name, _ = os.path.splitext(name)
@@ -182,3 +185,13 @@ def dependency_analysis(file_paths: list[str], package: str):
             ])
 
     return call_edges, import_edges
+
+
+def get_type_inference(file_name: str, entry_point: str) -> List[dict]:
+    inferer = TypeInference(
+        name=file_name, entry_point=entry_point
+    )
+    inferer.infer_types()
+    inferred = inferer.get_types()
+
+    return inferred

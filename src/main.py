@@ -2,19 +2,18 @@ import os
 import asyncio
 import shutil
 import zipfile
-import secrets
 import shutil
 import hashlib
 
 from pathlib import Path
-from scalpel.typeinfer.typeinfer import TypeInference
 from typing import Annotated
+
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.parse import get_full_structure, dependency_analysis
+from src.parse import get_full_structure, dependency_analysis, get_type_inference
 from src.randomize import randomize_type
 
 app = FastAPI()
@@ -91,8 +90,8 @@ async def get_dependency_edges(repo_name: str):
     file_paths = list(map(str, Path(project_path).glob("**/*.py")))
 
     call_edges, import_edges = dependency_analysis(file_paths, project_path)
-    return { 'call_edges': call_edges, 'import_edges': import_edges }
-    
+    return {'call_edges': call_edges, 'import_edges': import_edges}
+
 
 @app.get("/get_file/")
 async def get_file(repo_name: str, file_name: str):
@@ -119,6 +118,7 @@ async def create_upload_files(files: list[UploadFile]):
     return {"files": res}
     # return {"filenames": [file.filename for file in files]}
 
+
 @app.get("/generate-unit-tests/")
 async def generate_unit_tests(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
@@ -128,7 +128,7 @@ async def generate_unit_tests(repo_name: str):
         raise HTTPException(status_code=404, detail="Folder not found")
 
     file_paths = list(map(str, Path(project_path).glob("**/*.py")))
-    
+
     module_names = [
         os.path.relpath(file, project_path)
         for file in file_paths
@@ -144,7 +144,7 @@ async def generate_unit_tests(repo_name: str):
             )
 
             module_name = module_name.replace('/', '.')
-            
+
             pynguin_cmd = f"""pynguin \
                 --project-path {project_path} \
                 --output-path {output_path} \
@@ -175,17 +175,16 @@ async def generate_unit_tests(repo_name: str):
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
 
-@app.get("/get-type-inference/")
-async def get_type_inference():
+
+@app.get("/get-randomized-inputs/")
+async def get_randomized_inputs():
     file_name = 'type_infer_ex.py'
-    inferer = TypeInference(
-        name="type_infer_ex.py", entry_point=f"{UPLOAD_FOLDER}/my_project/type_infer_ex.py"
-    )
-    inferer.infer_types()
-    inferred = inferer.get_types()
+    entry_point = f"{UPLOAD_FOLDER}/my_project/type_infer_ex.py"
+
+    infer_list = get_type_inference(file_name, entry_point)
 
     randomized_inputs = {}
-    for item in inferred:
+    for item in infer_list:
         para_name = item.get('parameter', '')
         if para_name:
             type_name = item.get('type').pop()
