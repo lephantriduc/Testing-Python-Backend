@@ -26,7 +26,7 @@ fastapi run src/main.py
 
 ## API descriptions
 
-### /upload_zip/
+### /upload-zip/
 Upload a zip file to server.
 
 Input: the `.zip` file itself.
@@ -80,7 +80,7 @@ Example JSON response:
 
 > **NOTE** that a `.py` file has its own structure (dictionary) to reach all of its internal classes, methods and functions!
 
-### /get_structure/
+### /get-structure/
 Get folder_tree from a repo (required to be uploaded as zip in advance).
 
 Input: `repo_name` as a string.
@@ -89,7 +89,7 @@ Raise an `HTTPException(404)` if not found.
 
 JSON Response: the same as `folder_tree` in `/upload_zip/` response.
 
-### /get_file/
+### /get-file/
 Get a file from a repo (required to be uploaded as zip before).
 
 Input: `repo_name` and `file_name` as strings.
@@ -98,7 +98,7 @@ Raise an `HTTPException(404)` if not found.
 
 Return value is the file itself (`FileResponse`).
 
-### /generate_unit_tests/
+### /generate-unit-tests/
 Automatically generate unit tests for a repo.
 
 > **NOTE** that this is just a temporary test generation method and will be deprecated soon. 
@@ -111,7 +111,7 @@ Raise an:
 
 Return value is the zip file containing the generated tests.
 
-### /dependency_analysis/
+### /dependency-analysis/
 Generate dependencies edges that files from a repo emit.
 
 Input: `repo_name` as a string.
@@ -130,3 +130,5 @@ JSON response:
     ]
 }
 ```
+
+### /get-randomized-inputs/

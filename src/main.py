@@ -38,7 +38,7 @@ async def root():
     return {"message": "Welcome to Testing-Python-Backend!"}
 
 
-@app.post("/upload_zip/")
+@app.post("/upload-zip/")
 async def upload_zip_file(file: UploadFile):
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a .zip file")
@@ -75,7 +75,7 @@ async def upload_zip_file(file: UploadFile):
     }
 
 
-@app.get("/get_structure/")
+@app.get("/get-structure/")
 async def get_structure(repo_name: str):
     path_to_structure = f'{STRUCTURES_FOLDER}/{repo_name}.json'
     if os.path.exists(path_to_structure):
@@ -94,7 +94,7 @@ async def get_structure(repo_name: str):
     return full_structure
 
 
-@app.get("/dependency_analysis/")
+@app.get("/dependency-analysis/")
 async def get_dependency_edges(repo_name: str):
     project_path = os.path.join(UPLOAD_FOLDER, repo_name)
 
@@ -107,7 +107,7 @@ async def get_dependency_edges(repo_name: str):
     return {'call_edges': call_edges, 'import_edges': import_edges}
 
 
-@app.get("/get_file/")
+@app.get("/get-file/")
 async def get_file(repo_name: str, file_name: str):
     folder_path = os.path.join(UPLOAD_FOLDER, repo_name)
     file_path = os.path.join(folder_path, file_name)
