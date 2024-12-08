@@ -177,7 +177,14 @@ async def generate_unit_tests(repo_name: str):
 @app.get("/get-randomized-inputs/")
 async def get_randomized_inputs(repo_name: str, function_id: str):
     json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
-    path_to_file, function_name = find_function_by_id(json_file_path, function_id)
+    if not os.path.exists(json_file_path):
+        raise HTTPException(status_code=404, detail="Repo not found")
+
+    find_result = find_function_by_id(json_file_path, function_id)
+    if not find_result:
+        raise HTTPException(status_code=422, detail="Function not found in the specified repo")
+    path_to_file, function_name = find_result
+
 
     file_name = os.path.basename(path_to_file)
     entry_point = f"{UPLOAD_FOLDER}/{path_to_file}"
@@ -190,6 +197,5 @@ async def get_randomized_inputs(repo_name: str, function_id: str):
         if para_name:
             type_name = item.get('type').pop()
             randomized_inputs[para_name] = randomize_type(type_name)
-            print((para_name, type_name))
 
     return {'file_name': file_name, 'randomized_inputs': randomized_inputs}
