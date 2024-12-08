@@ -1,6 +1,5 @@
 import os
 import hashlib
-from typing import List
 
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
@@ -146,7 +145,7 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
     return structure, hashmap
 
 
-def _include_pyfile_children(package: str, node: dict, path: str):
+def _include_pyfile_children(package: str, node: dict, path: str) -> None:
     if node['ext'] == ".":
         for child in node['children']:
             _include_pyfile_children(package, child, os.path.join(path, child['name']))
@@ -187,7 +186,7 @@ def dependency_analysis(file_paths: list[str], package: str):
     return call_edges, import_edges
 
 
-def get_type_inference(file_name: str, entry_point: str) -> List[dict]:
+def get_type_inference(file_name: str, entry_point: str) -> list[dict]:
     inferer = TypeInference(
         name=file_name, entry_point=entry_point
     )
@@ -195,3 +194,55 @@ def get_type_inference(file_name: str, entry_point: str) -> List[dict]:
     inferred = inferer.get_types()
 
     return inferred
+
+
+import json
+
+
+def find_function_by_id(json_file_path: str, function_id: str) -> tuple[str, str]:
+    """
+    Search for a function ID in the project's parsed JSON structure.
+
+    Args:
+        json_file_path (str): The path to the JSON file containing the project structure.
+        function_id (str): The ID of the function to search for.
+
+    Returns:
+        tuple: (path_to_file, function_name) if found, else None.
+    """
+    # Load the JSON file
+    with open(json_file_path, 'r') as file:
+        project = json.load(file)
+
+    def traverse(project, current_path=""):
+        """
+        Recursively search for a function ID in the JSON hierarchy.
+        """
+        if "children" in project:
+            # Update the current path if it's a file or directory
+            if project.get("ext") == ".py":
+                current_path = f"{current_path}/{project['name']}".lstrip("/")
+            elif project.get("ext") == ".":
+                current_path = f"{current_path}/{project['name']}".rstrip("/")
+
+            # Traverse the children
+            if isinstance(project["children"], dict):  # Class or function children
+                for name, child in project["children"].items():
+                    # If the ID matches, return the path and function/class name
+                    if child.get("id") == function_id:
+                        return current_path, name
+                    # Recursively search within the child
+                    result = traverse(child, current_path)
+                    if result:
+                        return result
+            elif isinstance(project["children"], list):  # Directory or file children
+                for child in project["children"]:
+                    result = traverse(child, current_path)
+                    if result:
+                        return result
+
+        # If no match is found
+        return None
+
+    # Start traversal from the root
+    return traverse(project)
