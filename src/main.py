@@ -1,9 +1,11 @@
+import json
 import os
 import asyncio
 import shutil
 import zipfile
 import shutil
 import hashlib
+from json import JSONDecoder
 
 from pathlib import Path
 from typing import Annotated
@@ -20,6 +22,7 @@ app = FastAPI()
 
 UPLOAD_FOLDER = "./uploads"
 TEST_RESULT_FOLDER = "./test-results"
+STRUCTURES_FOLDER = "./structures"
 
 app.add_middleware(
     CORSMiddleware,
@@ -74,10 +77,21 @@ async def upload_zip_file(file: UploadFile):
 
 @app.get("/get_structure/")
 async def get_structure(repo_name: str):
+    path_to_structure = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+    if os.path.exists(path_to_structure):
+        with open(path_to_structure, 'r') as file:
+            return json.load(file)
+
     target_path = os.path.join(UPLOAD_FOLDER, repo_name)
     if not os.path.exists(target_path):
         raise HTTPException(status_code=404, detail="Repo not found")
-    return get_full_structure(target_path)
+    full_structure = get_full_structure(target_path)
+
+    json_object = json.dumps(full_structure, indent=2)
+    with open(f"./structures/{repo_name}.json", "w") as outfile:
+        outfile.write(json_object)
+
+    return full_structure
 
 
 @app.get("/dependency_analysis/")
