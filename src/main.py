@@ -8,14 +8,14 @@ import hashlib
 from json import JSONDecoder
 
 from pathlib import Path
-from typing import Annotated
 
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from hyperlink.hypothesis import paths
 
-from src.parse import get_full_structure, dependency_analysis, get_type_inference
+from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_function_by_id
 from src.randomize import randomize_type
 
 app = FastAPI()
@@ -175,9 +175,12 @@ async def generate_unit_tests(repo_name: str):
 
 
 @app.get("/get-randomized-inputs/")
-async def get_randomized_inputs():
-    file_name = 'type_infer_ex.py'
-    entry_point = f"{UPLOAD_FOLDER}/my_project/type_infer_ex.py"
+async def get_randomized_inputs(repo_name: str, function_id: str):
+    json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+    path_to_file, function_name = find_function_by_id(json_file_path, function_id)
+
+    file_name = os.path.basename(path_to_file)
+    entry_point = f"{UPLOAD_FOLDER}/{path_to_file}"
 
     infer_list = get_type_inference(file_name, entry_point)
 
