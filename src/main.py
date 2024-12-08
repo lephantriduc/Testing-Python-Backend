@@ -5,8 +5,9 @@ import zipfile
 import secrets
 import shutil
 import hashlib
-from pathlib import Path
 
+from pathlib import Path
+from scalpel.typeinfer.typeinfer import TypeInference
 from typing import Annotated
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
@@ -14,6 +15,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.parse import get_full_structure, dependency_analysis
+from src.randomize import randomize_type
 
 app = FastAPI()
 
@@ -172,3 +174,22 @@ async def generate_unit_tests(repo_name: str):
 
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
+
+@app.get("/get-type-inference/")
+async def get_type_inference():
+    file_name = 'type_infer_ex.py'
+    inferer = TypeInference(
+        name="type_infer_ex.py", entry_point=f"{UPLOAD_FOLDER}/my_project/type_infer_ex.py"
+    )
+    inferer.infer_types()
+    inferred = inferer.get_types()
+
+    randomized_inputs = {}
+    for item in inferred:
+        para_name = item.get('parameter', '')
+        if para_name:
+            type_name = item.get('type').pop()
+            randomized_inputs[para_name] = randomize_type(type_name)
+            print((para_name, type_name))
+
+    return {'file_name': file_name, 'randomized_inputs': randomized_inputs}
