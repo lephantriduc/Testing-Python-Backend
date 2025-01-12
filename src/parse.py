@@ -1,6 +1,7 @@
 import os
 import hashlib
 
+from networkx import goldberg_radzik
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
 from scalpel.import_graph.import_graph import ImportGraph, Tree
@@ -195,54 +196,127 @@ def get_type_inference(file_name: str, entry_point: str) -> list[dict]:
 
     return inferred
 
-
-import json
-
-
-def find_function_by_id(json_file_path: str, function_id: str) -> tuple[str, str]:
+function_name = ''
+def find_function_by_id(json_data, function_id, current_path="", current_namespace=""):
     """
-    Search for a function ID in the project's parsed JSON structure.
+    Recursively searches for a function by its ID in the given JSON structure.
 
-    Args:
-        json_file_path (str): The path to the JSON file containing the project structure.
-        function_id (str): The ID of the function to search for.
-
-    Returns:
-        tuple: (path_to_file, function_name) if found, else None.
+    :param json_data: The structure in JSON.
+    :param function_id: The ID of the function to search for.
+    :param current_path: The current file/directory path being traversed.
+    :param current_namespace: The current namespace (used for dependency paths).
+    :return: A dictionary containing the function's metadata, file path, and function path, or None if not found.
     """
-    # Load the JSON file
-    with open(json_file_path, 'r') as file:
-        project = json.load(file)
 
-    def traverse(project, current_path=""):
-        """
-        Recursively search for a function ID in the JSON hierarchy.
-        """
-        if "children" in project:
-            # Update the current path if it's a file or directory
-            if project.get("ext") == ".py":
-                current_path = f"{current_path}/{project['name']}".lstrip("/")
-            elif project.get("ext") == ".":
-                current_path = f"{current_path}/{project['name']}".rstrip("/")
+    #TODO: We actually don't need current_namespace. We can parse the namespace from the file path. Might going to
+    # the function name instead of the namespace in the future.
 
-            # Traverse the children
-            if isinstance(project["children"], dict):  # Class or function children
-                for name, child in project["children"].items():
-                    # If the ID matches, return the path and function/class name
-                    if child.get("id") == function_id:
-                        return current_path, name
-                    # Recursively search within the child
-                    result = traverse(child, current_path)
-                    if result:
-                        return result
-            elif isinstance(project["children"], list):  # Directory or file children
-                for child in project["children"]:
-                    result = traverse(child, current_path)
-                    if result:
-                        return result
+    global function_name
+    if isinstance(json_data, dict):
+        # Check if the current node has the desired ID
+        if json_data.get("id") == function_id:
+            function_namespace = f"{current_namespace}.{function_name}".strip(".")
+            return {
+                "name": function_name,
+                "function_metadata": json_data,
+                "file_path": current_path,
+                "function_namespace": function_namespace,
+            }
 
-        # If no match is found
-        return None
+        # Update the current path and namespace
+        if json_data.get("ext") is not None:
+            current_path = f"{current_path}/{json_data['name']}".lstrip("/")
+            namespace_part = json_data["name"].replace(".py", "")
+            current_namespace = f"{current_namespace}.{namespace_part}".strip(".")
 
-    # Start traversal from the root
-    return traverse(project)
+        # Recursively search children
+        for key, value in json_data.items():
+            function_name = key
+            if isinstance(value, (dict, list)):
+                result = find_function_by_id(value, function_id, current_path, current_namespace)
+                if result:
+                    return result
+
+    elif isinstance(json_data, list):
+        for item in json_data:
+            result = find_function_by_id(item, function_id, current_path, current_namespace)
+            if result:
+                return result
+
+    return None
+
+
+def extract_function_code(file_path, start_line, end_line):
+    """
+    Extracts the code of a function from a file based on start and end line numbers.
+
+    :param file_path: Path to the file containing the function.
+    :param start_line: The line where the function starts.
+    :param end_line: The line where the function ends.
+    :return: Extracted function code as a string.
+    """
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+        # Extract the lines corresponding to the function
+        function_code = lines[start_line - 1:end_line]
+        return ''.join(function_code)
+    except Exception as e:
+        return f"Error reading file: {e}"
+
+def get_function_dependencies(function_name, dependency_data):
+    """
+    Retrieves all functions called by the given function based on dependency analysis.
+
+    :param function_name: Fully qualified name of the function (e.g., "my_project.utils.add").
+    :param dependency_data: Dependency analysis JSON data.
+    :return: List of called functions.
+    """
+    call_edges = dependency_data.get("call_edges", [])
+    called_functions = []
+
+    for edge in call_edges:
+        caller, callee = edge
+        if caller == function_name:
+            called_functions.append(callee)
+
+    return called_functions
+
+def find_function_by_path(json_data, target_namespace, current_namespace=""):
+    """
+    Recursively searches for a function by its fully qualified path in the given JSON structure.
+
+    :param json_data: The JSON structure representing the project.
+    :param target_namespace: The target namespace we want to trace.
+    :param current_namespace: The current namespace (used for tracking the path during recursion).
+    :return: Function id.
+    """
+    global function_name
+
+    if isinstance(json_data, dict):
+        # Check if the current node has the desired ID
+        if f"{current_namespace}.{function_name}".strip(".") == target_namespace:
+            function_namespace = f"{current_namespace}.{function_name}".strip(".")
+            return json_data.get('id')
+
+        # Update the current path and namespace
+        if json_data.get("ext") is not None:
+            # current_path = f"{current_path}/{json_data['name']}".lstrip("/")
+            namespace_part = json_data["name"].replace(".py", "")
+            current_namespace = f"{current_namespace}.{namespace_part}".strip(".")
+
+        # Recursively search children
+        for key, value in json_data.items():
+            function_name = key
+            if isinstance(value, (dict, list)):
+                result = find_function_by_path(value, target_namespace, current_namespace)
+                if result:
+                    return result
+
+    elif isinstance(json_data, list):
+        for item in json_data:
+            result = find_function_by_path(item, target_namespace, current_namespace)
+            if result:
+                return result
+
+    return None

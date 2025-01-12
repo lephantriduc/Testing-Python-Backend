@@ -5,6 +5,10 @@ import shutil
 import zipfile
 import shutil
 import hashlib
+from asyncio import start_server
+from contextlib import nullcontext
+
+import openai
 from json import JSONDecoder
 
 from pathlib import Path
@@ -14,9 +18,16 @@ from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from hyperlink.hypothesis import paths
+from multipart import file_path
+from pyexpat.errors import messages
+from twisted.python.log import deferr
+from twisted.web.http import responses
 
-from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_function_by_id
+from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_function_by_id, \
+    extract_function_code, get_function_dependencies, find_function_by_path
 from src.randomize import randomize_type
+from src.utils import *
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -174,28 +185,127 @@ async def generate_unit_tests(repo_name: str):
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
 
 
-@app.get("/get-randomized-inputs/")
-async def get_randomized_inputs(repo_name: str, function_id: str):
+# @app.get("/get-randomized-inputs/")
+# async def get_randomized_inputs(repo_name: str, function_id: str):
+#     json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+#     if not os.path.exists(json_file_path):
+#         raise HTTPException(status_code=404, detail="Repo not found")
+#
+#     find_result = find_function_by_id(json_file_path, function_id)
+#     if not find_result:
+#         raise HTTPException(status_code=422, detail="Function not found in the specified repo")
+#     path_to_file, function_name = find_result
+#
+#
+#     file_name = os.path.basename(path_to_file)
+#     entry_point = f"{UPLOAD_FOLDER}/{path_to_file}"
+#
+#     infer_list = get_type_inference(file_name, entry_point)
+#
+#     randomized_inputs = {}
+#     for item in infer_list:
+#         para_name = item.get('parameter', '')
+#         if para_name:
+#             type_name = item.get('type').pop()
+#             randomized_inputs[para_name] = randomize_type(type_name)
+#
+#     return {'file_name': file_name, 'randomized_inputs': randomized_inputs}
+
+@app.get("/get-function-info")
+async def get_function_info(repo_name: str, function_id: str):
     json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
     if not os.path.exists(json_file_path):
         raise HTTPException(status_code=404, detail="Repo not found")
 
-    find_result = find_function_by_id(json_file_path, function_id)
-    if not find_result:
-        raise HTTPException(status_code=422, detail="Function not found in the specified repo")
-    path_to_file, function_name = find_result
+    with open(json_file_path, 'r') as file:
+        project_json = json.load(file)
 
+    function_info = find_function_by_id(project_json, function_id)
 
-    file_name = os.path.basename(path_to_file)
-    entry_point = f"{UPLOAD_FOLDER}/{path_to_file}"
+    return function_info
 
-    infer_list = get_type_inference(file_name, entry_point)
+@app.get("/get-function-info-from-path")
+async def get_function_info_from_path(repo_name: str, path_to_file: str):
+    json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+    if not os.path.exists(json_file_path):
+        raise HTTPException(status_code=404, detail="Repo not found")
 
-    randomized_inputs = {}
-    for item in infer_list:
-        para_name = item.get('parameter', '')
-        if para_name:
-            type_name = item.get('type').pop()
-            randomized_inputs[para_name] = randomize_type(type_name)
+    with open(json_file_path, 'r') as file:
+        project_json = json.load(file)
 
-    return {'file_name': file_name, 'randomized_inputs': randomized_inputs}
+    function_info = find_function_by_path(project_json, path_to_file)
+
+    return function_info
+
+# What am I even doing??? A temporary fix.
+def remove_duplicate_prefix(full_path):
+    parts = full_path.split('.')
+    if len(parts) > 1 and parts[0] == parts[1]:
+        parts.pop(0)
+    return '.'.join(parts)
+
+def add_duplicate_prefix(repo_name, full_path):
+    return f'{repo_name}.' + full_path
+
+@app.get("/get-dependencies")
+async def get_dependencies(repo_name: str, function_id: str):
+    dependency_data = await get_dependency_edges(repo_name)
+    function_info = await get_function_info(repo_name, function_id)
+
+    function_namespace = function_info['function_namespace']
+
+    function_namespace = remove_duplicate_prefix(function_namespace)
+
+    return get_function_dependencies(function_namespace, dependency_data)
+
+@app.get("/get-code")
+async def get_code(repo_name: str, function_id: str):
+    function_info = await get_function_info(repo_name, function_id)
+
+    path_to_file = function_info['file_path']
+    path_to_file = os.path.join(f'{UPLOAD_FOLDER}', path_to_file)
+    first_line = function_info['function_metadata']['first']
+    last_line = function_info['function_metadata']['last']
+
+    return extract_function_code(path_to_file, first_line, last_line)
+
+@app.get("/get-dependencies-code")
+async def get_dependencies_code(repo_name: str, function_id: str):
+    json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+    if not os.path.exists(json_file_path):
+        raise HTTPException(status_code=404, detail="Repo not found")
+
+    with open(json_file_path, 'r') as file:
+        project_json = json.load(file)
+
+    dependencies_ids = []
+    dependencies = await get_dependencies(repo_name, function_id)
+
+    for dependency in dependencies:
+        dependency = add_duplicate_prefix(repo_name, dependency)
+        dependency_id = find_function_by_path(project_json, dependency)
+        if dependency_id is not None:
+            dependencies_ids.append(dependency_id)
+
+    codes = []
+    for dependency_id in dependencies_ids:
+        code = await get_code(repo_name, dependency_id)
+        codes.append(code)
+
+    return codes
+
+@app.post("/ai-gen-test")
+async def ai_gen_test(repo_name: str, function_id: str):
+
+    main_code = await get_code(repo_name, function_id)
+    dependency_code = await get_dependencies_code(repo_name, function_id)
+
+    response = generate_test_with_ai(main_code, dependency_code)
+    return response
+
+    # return main_code, dependency_code
+
+if __name__ == '__main__':
+    print("""
+    "To create a thorough set of unit tests for the given code, we should test both the `multiply` function and its dependency, the `add` function. The primary goal is to ensure that both functions work correctly across typical cases, edge cases (such as zero or negative numbers), and any unusual scenarios that might arise. \n\nBelow, I've provided unit test cases using Python's `unittest` framework:\n\n```python\nimport unittest\n\ndef add(a, b):\n    return a + b\n\ndef multiply(a, b):\n    res = 0\n    for _ in range(b):\n        res = add(res, a)\n    return res\n\nclass TestMathOperations(unittest.TestCase):\n\n    # Tests for the add function\n    def test_add_positive_numbers(self):\n        self.assertEqual(add(2, 3), 5)\n\n    def test_add_negative_numbers(self):\n        self.assertEqual(add(-2, -3), -5)\n\n    def test_add_mixed_sign_numbers(self):\n        self.assertEqual(add(-2, 3), 1)\n\n    def test_add_with_zero(self):\n        self.assertEqual(add(0, 3), 3)\n        self.assertEqual(add(3, 0), 3)\n\n    # Tests for the multiply function\n    def test_multiply_positive_numbers(self):\n        self.assertEqual(multiply(2, 3), 6)\n\n    def test_multiply_negative_numbers(self):\n        self.assertEqual(multiply(-2, 3), -6)\n        self.assertEqual(multiply(2, -3), -6)\n        self.assertEqual(multiply(-2, -3), 6)\n\n    def test_multiply_with_zero(self):\n        self.assertEqual(multiply(0, 3), 0)\n        self.assertEqual(multiply(3, 0), 0)\n        self.assertEqual(multiply(0, 0), 0)\n\n    def test_multiply_with_one(self):\n        self.assertEqual(multiply(1, 5), 5)\n        self.assertEqual(multiply(5, 1), 5)\n        self.assertEqual(multiply(-1, 5), -5)\n        self.assertEqual(multiply(5, -1), -5)\n\n    def test_multiply_large_numbers(self):\n        self.assertEqual(multiply(123456, 0), 0)\n        self.assertEqual(multiply(1, 123456), 123456)\n\n    def test_multiply_float(self):\n        # The multiply function is designed for integers only\n        # Here you can check how the function would deal with floats\n        # but if you're strict about types, a TypeError should be applied.\n        with self.assertRaises(TypeError):\n            multiply(2.5, 3)\n\n    def test_multiply_non_integer(self):\n        # Ensure non-integers throw an error\n        with self.assertRaises(TypeError):\n            multiply('2', 3)\n\nif __name__ == '__main__':\n    unittest.main()\n```\n\n### Explanation\n\n1. **Dependency Tests (`add` function):**\n    - We test with positive numbers, negative numbers, mixed sign numbers, and zero as arguments for comprehensive coverage.\n\n2. **Main Function Tests (`multiply` function):**\n    - Again, we test with positive numbers, negative numbers, zero, and one.\n    - We also include checks for behavior with floats and non-integer inputs, expecting a `TypeError` since the function is intended for integers. Handling of this error will require adjustments to the `multiply` function.\n    \nThese tests aim to cover most common and edge cases for both functions, ensuring they behave correctly under different scenarios. Note that since `multiply` is currently only suited for integer operations, you may need to integrate type checks or casting within the function to handle inputs more robustly or intentionally raise errors on invalid types."
+    """)
