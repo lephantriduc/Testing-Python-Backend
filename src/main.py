@@ -23,8 +23,8 @@ from pyexpat.errors import messages
 from twisted.python.log import deferr
 from twisted.web.http import responses
 
-from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_function_by_id, \
-    extract_function_code, get_function_dependencies, find_function_by_path
+from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_element_by_id, \
+    extract_function_code, get_function_dependencies, find_function_by_path, get_file_info_from_id
 from src.randomize import randomize_type
 from src.utils import *
 from pydantic import BaseModel
@@ -184,8 +184,8 @@ async def generate_unit_tests(repo_name: str):
     headers = {"Content-Disposition": "attachment; filename=unit_tests.zip"}
     return FileResponse(archived_file, headers=headers, media_type="application/zip")
 
-@app.get("/get-function-info")
-async def get_function_info(repo_name: str, function_id: str):
+@app.get("/get-json-element-info")
+async def get_json_element_info(repo_name: str, element_id: str):
     json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
     if not os.path.exists(json_file_path):
         raise HTTPException(status_code=404, detail="Repo not found")
@@ -193,9 +193,26 @@ async def get_function_info(repo_name: str, function_id: str):
     with open(json_file_path, 'r') as file:
         project_json = json.load(file)
 
-    function_info = find_function_by_id(project_json, function_id)
+    function_info = find_element_by_id(project_json, element_id)
 
     return function_info
+
+@app.get("/get-file-info")
+async def get_file_info(repo_name: str, file_id: str):
+    json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
+    if not os.path.exists(json_file_path):
+        raise HTTPException(status_code=404, detail="Repo not found")
+
+    with open(json_file_path, 'r') as file:
+        project_json = json.load(file)
+
+    file_info = get_file_info_from_id(project_json, file_id)
+
+    if file_info is None:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return file_info
+
 
 @app.get("/get-function-info-from-path")
 async def get_function_info_from_path(repo_name: str, path_to_file: str):
@@ -223,7 +240,7 @@ def add_duplicate_prefix(repo_name, full_path):
 @app.get("/get-dependencies")
 async def get_dependencies(repo_name: str, function_id: str):
     dependency_data = await get_dependency_edges(repo_name)
-    function_info = await get_function_info(repo_name, function_id)
+    function_info = await get_json_element_info(repo_name, function_id)
 
     function_namespace = function_info['function_namespace']
 
@@ -233,7 +250,7 @@ async def get_dependencies(repo_name: str, function_id: str):
 
 @app.get("/get-code")
 async def get_code(repo_name: str, function_id: str):
-    function_info = await get_function_info(repo_name, function_id)
+    function_info = await get_json_element_info(repo_name, function_id)
 
     path_to_file = function_info['file_path']
     path_to_file = os.path.join(f'{UPLOAD_FOLDER}', path_to_file)
@@ -267,7 +284,7 @@ async def get_dependencies_code(repo_name: str, function_id: str):
 
     return codes
 
-@app.post("/ai-gen-test")
+@app.get("/ai-gen-test")
 async def ai_gen_test(repo_name: str, function_id: str):
 
     main_code = await get_code(repo_name, function_id)

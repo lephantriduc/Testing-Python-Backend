@@ -6,6 +6,7 @@ from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
 from scalpel.import_graph.import_graph import ImportGraph, Tree
 from scalpel.typeinfer.typeinfer import TypeInference
+# from uvloop.includes.system import ntohl
 
 
 def _get_folder_tree(path: str) -> dict:
@@ -76,6 +77,7 @@ def _get_folder_tree(path: str, cur_full_path: str) -> dict:
         return {
             "id": id,
             "name": name,
+            "type": "folder",
             "full_path": cur_full_path,
             "ext": ".",
             "children": [
@@ -93,6 +95,7 @@ def _get_folder_tree(path: str, cur_full_path: str) -> dict:
         return {
             "id": id,
             "name": name,
+            "type": "file",
             "full_path": cur_full_path,
             "ext": ext,
             "children": []
@@ -336,15 +339,15 @@ def get_type_inference(file_name: str, entry_point: str) -> list[dict]:
     return inferred
 
 function_name = ''
-def find_function_by_id(json_data, function_id, current_path="", current_namespace=""):
+def find_element_by_id(json_data, id, current_path="", current_namespace=""):
     """
-    Recursively searches for a function by its ID in the given JSON structure.
+    Recursively searches for a JSON element by its ID in the given JSON structure.
 
     :param json_data: The structure in JSON.
-    :param function_id: The ID of the function to search for.
+    :param id: The ID of the element to search for.
     :param current_path: The current file/directory path being traversed.
     :param current_namespace: The current namespace (used for dependency paths).
-    :return: A dictionary containing the function's metadata, file path, and function path, or None if not found.
+    :return: A dictionary containing the element's metadata, file path, and function path, or None if not found.
     """
 
     #TODO: We actually don't need current_namespace. We can parse the namespace from the file path. Might going to
@@ -353,13 +356,12 @@ def find_function_by_id(json_data, function_id, current_path="", current_namespa
     global function_name
     if isinstance(json_data, dict):
         # Check if the current node has the desired ID
-        if json_data.get("id") == function_id:
-            function_namespace = f"{current_namespace}.{function_name}".strip(".")
+        if json_data.get("id") == id:
+            namespace = f"{current_namespace}.{function_name}".strip(".")
             return {
-                "name": function_name,
-                "function_metadata": json_data,
+                "metadata": json_data,
                 "file_path": current_path,
-                "function_namespace": function_namespace,
+                "namespace": namespace,
             }
 
         # Update the current path and namespace
@@ -372,18 +374,24 @@ def find_function_by_id(json_data, function_id, current_path="", current_namespa
         for key, value in json_data.items():
             function_name = key
             if isinstance(value, (dict, list)):
-                result = find_function_by_id(value, function_id, current_path, current_namespace)
+                result = find_element_by_id(value, id, current_path, current_namespace)
                 if result:
                     return result
 
     elif isinstance(json_data, list):
         for item in json_data:
-            result = find_function_by_id(item, function_id, current_path, current_namespace)
+            result = find_element_by_id(item, id, current_path, current_namespace)
             if result:
                 return result
 
     return None
 
+def get_file_info_from_id(json_data, id):
+    result = find_element_by_id(json_data, id)
+    if result.get('metadata').get('type') == 'file':
+        return result.get('metadata').get('children')
+    else:
+        return None
 
 def extract_function_code(file_path, start_line, end_line):
     """
