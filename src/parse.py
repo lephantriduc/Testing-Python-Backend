@@ -9,9 +9,9 @@ from scalpel.typeinfer.typeinfer import TypeInference
 
 
 def _get_folder_tree(path: str) -> dict:
-    '''
+    """
     Create a folder tree from directory.
-    
+
     Example result:
     ```
     {
@@ -24,7 +24,7 @@ def _get_folder_tree(path: str) -> dict:
         ]
     }
     ```
-    '''
+    """
 
     name = os.path.basename(path)
     if os.path.isdir(path):
@@ -45,6 +45,55 @@ def _get_folder_tree(path: str) -> dict:
             _, ext = os.path.splitext(name)
         return {
             "name": name,
+            "ext": ext,
+            "children": []
+        }
+
+def _get_folder_tree(path: str, cur_full_path: str) -> dict:
+    """
+    Create a folder tree from directory.
+    The different between this and the above function is this adds ids to everything.
+
+    Example result:
+    ```
+    {
+        "id": 'abc123',
+        "name": <path>,
+        "ext": ".",
+        "children": [
+            { "name": "file.py",    "ext": ".py"  },
+            { "name": "file.png",   "ext": ".png" },
+            { "name": "somefolder", "ext": ".", "children": [] }
+        ]
+    }
+    ```
+    """
+
+    name = os.path.basename(path)
+    cur_full_path = os.path.join(cur_full_path, name)
+    id = hashlib.sha256(cur_full_path.encode()).hexdigest()
+    if os.path.isdir(path):
+        return {
+            "id": id,
+            "name": name,
+            "full_path": cur_full_path,
+            "ext": ".",
+            "children": [
+                _get_folder_tree(os.path.join(path, child), cur_full_path)
+                for child in os.listdir(path)
+            ]
+        }
+    else:
+        if "." not in name:
+            ext = ""
+        elif "." not in name[1:]:
+            ext = name
+        else:
+            _, ext = os.path.splitext(name)
+        return {
+            "id": id,
+            "name": name,
+            "full_path": cur_full_path,
             "ext": ext,
             "children": []
         }
@@ -249,7 +298,7 @@ def get_full_structure(path: str):
     Same as _get_folder_tree, but now Python files
     have their own children (functions, classes, methods, ...)
     '''
-    res = _get_folder_tree(path)
+    res = _get_folder_tree(path, '')
     _include_pyfile_children(path, res, path)
     return res
 
