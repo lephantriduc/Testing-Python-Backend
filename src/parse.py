@@ -51,9 +51,9 @@ def _get_folder_tree(path: str) -> dict:
 
 
 def _construct_pyfile_children(package: str, file: str) -> dict:
-    '''
+    """
     Get all functions with their respective offset (first, last).
-    
+
     Example result:
     ```
     {
@@ -81,7 +81,7 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
         }
     }
     ```
-    '''
+    """
 
     cg_generator = CallGraphGenerator([file], package)
     cg_generator.analyze()
@@ -145,13 +145,115 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
 
     return structure, hashmap
 
+def _construct_pyfile_children_list(package: str, file: str) -> list:
+    """
+    Get all functions with their respective offset (first, last).
+
+    Example result:
+    ```
+    [
+       {
+            "id": "123",
+            "name": "func_1",
+            "type": "function",
+            "first": 1,
+            "last": 6,
+            "children": {},
+        },
+        {
+            "id": "456",
+            "name": "class_2",
+            "type": "class",
+            "first": 7,
+            "last": 10,
+            "children": [
+                {
+                    "id": "789",
+                    "name": "__init__",
+                    "type": "class:method",
+                    "first": 8,
+                    "last": 10,
+                    "children": {}
+                }
+            ]
+        }
+    ]
+    ```
+    """
+
+    cg_generator = CallGraphGenerator([file], package)
+    cg_generator.analyze()
+
+    # exclude package from file name
+    name = file[len(package) + 1:]
+
+    # exclude extension
+    name, _ = os.path.splitext(name)
+    name = name.replace('/', '.')
+
+    # extract offset dict
+    data = cg_generator.output_internal_mods()
+    data = data[name]['methods']
+
+    # file structure and id->obj mapping
+    structure, hashmap = [], {}
+
+    def _build(structure, cfg, name, parent_type=''):
+        class_cfgs = cfg.class_cfgs.values()
+        function_cfgs = cfg.functioncfgs.values()
+
+        for cfg in class_cfgs:
+            full_name = name + '.' + cfg.name
+            id = hashlib.sha256(full_name.encode()).hexdigest()
+            structure.append( {
+                'id': id,
+                'name': cfg.name,
+                'type': parent_type + ':class',
+                'first': data[full_name]['first'],
+                'last': data[full_name]['last'],
+                'children': {}
+            })
+            # hashmap[id] = full_name
+            # _build(
+            #     structure[cfg.name]['children'],
+            #     cfg,
+            #     full_name,
+            #     structure[cfg.name]['type']
+            # )
+
+        for cfg in function_cfgs:
+            full_name = name + '.' + cfg.name
+            id = hashlib.sha256(full_name.encode()).hexdigest()
+            tpe = 'method' if parent_type.split(':')[-1] == 'class' else 'function'
+            structure.append({
+                'id': id,
+                'name': cfg.name,
+                'type': parent_type + ':' + tpe,
+                'first': data[full_name]['first'],
+                'last': data[full_name]['last'],
+                'children': {}
+            })
+            # hashmap[id] = full_name
+            # _build(
+            #     structure[cfg.name]['children'],
+            #     cfg,
+            #     full_name,
+            #     structure[cfg.name]['type']
+            # )
+
+    _build(structure, CFGBuilder().build_from_file("", file), name)
+
+    # return structure, hashmap
+    return structure
+
 
 def _include_pyfile_children(package: str, node: dict, path: str) -> None:
     if node['ext'] == ".":
         for child in node['children']:
             _include_pyfile_children(package, child, os.path.join(path, child['name']))
     elif node['ext'] == ".py" and node['name'] != '__init__.py':
-        node['children'], _ = _construct_pyfile_children(package, path)
+        # node['children'], _ = _construct_pyfile_children(package, path)
+        node['children'] = _construct_pyfile_children_list(package, path)
 
 
 def get_full_structure(path: str):
