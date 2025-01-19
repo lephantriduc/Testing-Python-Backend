@@ -197,8 +197,8 @@ async def get_json_element_info(repo_name: str, element_id: str):
 
     return function_info
 
-@app.get("/get-file-info")
-async def get_file_info(repo_name: str, file_id: str):
+@app.get("/get-file-content")
+async def get_file_content(repo_name: str, file_id: str):
     json_file_path = f'{STRUCTURES_FOLDER}/{repo_name}.json'
     if not os.path.exists(json_file_path):
         raise HTTPException(status_code=404, detail="Repo not found")
@@ -211,8 +211,23 @@ async def get_file_info(repo_name: str, file_id: str):
     if file_info is None:
         raise HTTPException(status_code=404, detail="File not found")
 
-    return file_info
+    file_full_path = os.path.join(UPLOAD_FOLDER, file_info['full_path'])
 
+    result = {}
+
+    try:
+        with open(file_full_path, 'r', encoding='utf-8') as file:
+            result['file_content'] = file.read()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file at path '{file_full_path}' does not exist.")
+    except PermissionError:
+        raise PermissionError(f"Permission denied for file at path '{file_full_path}'.")
+    except Exception as e:
+        raise IOError(f"An error occurred while reading the file: {e}")
+
+    result['metadata'] = file_info.get('children')
+
+    return result
 
 @app.get("/get-function-info-from-path")
 async def get_function_info_from_path(repo_name: str, path_to_file: str):
@@ -254,8 +269,8 @@ async def get_code(repo_name: str, function_id: str):
 
     path_to_file = function_info['file_path']
     path_to_file = os.path.join(f'{UPLOAD_FOLDER}', path_to_file)
-    first_line = function_info['function_metadata']['first']
-    last_line = function_info['function_metadata']['last']
+    first_line = function_info['metadata']['first']
+    last_line = function_info['metadata']['last']
 
     return extract_function_code(path_to_file, first_line, last_line)
 

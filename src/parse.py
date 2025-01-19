@@ -389,7 +389,7 @@ def find_element_by_id(json_data, id, current_path="", current_namespace=""):
 def get_file_info_from_id(json_data, id):
     result = find_element_by_id(json_data, id)
     if result.get('metadata').get('type') == 'file':
-        return result.get('metadata').get('children')
+        return result.get('metadata')
     else:
         return None
 
