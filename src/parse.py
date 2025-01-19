@@ -148,6 +148,9 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
 def _construct_pyfile_children_list(package: str, file: str) -> list:
     """
     Get all functions with their respective offset (first, last).
+    The difference between this and the above function is:
+        - This one returns list
+        - It adds `name` field inside each of the list element
 
     Example result:
     ```
@@ -213,13 +216,6 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
                 'last': data[full_name]['last'],
                 'children': {}
             })
-            # hashmap[id] = full_name
-            # _build(
-            #     structure[cfg.name]['children'],
-            #     cfg,
-            #     full_name,
-            #     structure[cfg.name]['type']
-            # )
 
         for cfg in function_cfgs:
             full_name = name + '.' + cfg.name
@@ -233,17 +229,9 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
                 'last': data[full_name]['last'],
                 'children': {}
             })
-            # hashmap[id] = full_name
-            # _build(
-            #     structure[cfg.name]['children'],
-            #     cfg,
-            #     full_name,
-            #     structure[cfg.name]['type']
-            # )
 
     _build(structure, CFGBuilder().build_from_file("", file), name)
 
-    # return structure, hashmap
     return structure
 
 
