@@ -1,5 +1,7 @@
 import os
 import hashlib
+from http.client import responses
+from tkinter.font import names
 
 from networkx import goldberg_radzik
 from scalpel.cfg import CFGBuilder, CFG
@@ -263,6 +265,7 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
             structure.append( {
                 'id': id,
                 'name': cfg.name,
+                'absolute_path_to_file': file,
                 'type': parent_type + ':class',
                 'first': data[full_name]['first'],
                 'last': data[full_name]['last'],
@@ -276,6 +279,7 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
             structure.append({
                 'id': id,
                 'name': cfg.name,
+                'absolute_path_to_file': file,
                 'type': parent_type + ':' + tpe,
                 'first': data[full_name]['first'],
                 'last': data[full_name]['last'],
@@ -292,7 +296,6 @@ def _include_pyfile_children(package: str, node: dict, path: str) -> None:
         for child in node['children']:
             _include_pyfile_children(package, child, os.path.join(path, child['name']))
     elif node['ext'] == ".py" and node['name'] != '__init__.py':
-        # node['children'], _ = _construct_pyfile_children(package, path)
         node['children'] = _construct_pyfile_children_list(package, path)
 
 
@@ -338,49 +341,38 @@ def get_type_inference(file_name: str, entry_point: str) -> list[dict]:
 
     return inferred
 
-function_name = ''
-def find_element_by_id(json_data, id, current_path="", current_namespace=""):
+def find_element_by_id(json_data, id, current_path=""):
     """
     Recursively searches for a JSON element by its ID in the given JSON structure.
 
     :param json_data: The structure in JSON.
     :param id: The ID of the element to search for.
     :param current_path: The current file/directory path being traversed.
-    :param current_namespace: The current namespace (used for dependency paths).
     :return: A dictionary containing the element's metadata, file path, and function path, or None if not found.
     """
 
-    #TODO: We actually don't need current_namespace. We can parse the namespace from the file path. Might going to
-    # the function name instead of the namespace in the future.
-
-    global function_name
     if isinstance(json_data, dict):
         # Check if the current node has the desired ID
         if json_data.get("id") == id:
-            namespace = f"{current_namespace}.{function_name}".strip(".")
             return {
                 "metadata": json_data,
                 "file_path": current_path,
-                "namespace": namespace,
             }
 
         # Update the current path and namespace
         if json_data.get("ext") is not None:
             current_path = f"{current_path}/{json_data['name']}".lstrip("/")
-            namespace_part = json_data["name"].replace(".py", "")
-            current_namespace = f"{current_namespace}.{namespace_part}".strip(".")
 
         # Recursively search children
         for key, value in json_data.items():
-            function_name = key
             if isinstance(value, (dict, list)):
-                result = find_element_by_id(value, id, current_path, current_namespace)
+                result = find_element_by_id(value, id, current_path)
                 if result:
                     return result
 
     elif isinstance(json_data, list):
         for item in json_data:
-            result = find_element_by_id(item, id, current_path, current_namespace)
+            result = find_element_by_id(item, id, current_path)
             if result:
                 return result
 
@@ -429,7 +421,7 @@ def get_function_dependencies(function_name, dependency_data):
 
     return called_functions
 
-def find_function_by_path(json_data, target_namespace, current_namespace=""):
+def find_id_by_path(json_data, target_namespace, current_namespace=""):
     """
     Recursively searches for a function by its fully qualified path in the given JSON structure.
 
@@ -438,32 +430,66 @@ def find_function_by_path(json_data, target_namespace, current_namespace=""):
     :param current_namespace: The current namespace (used for tracking the path during recursion).
     :return: Function id.
     """
-    global function_name
 
     if isinstance(json_data, dict):
+        name = json_data.get("name")
         # Check if the current node has the desired ID
-        if f"{current_namespace}.{function_name}".strip(".") == target_namespace:
-            function_namespace = f"{current_namespace}.{function_name}".strip(".")
+        if f"{current_namespace}.{name}".strip(".") == target_namespace:
+            # function_namespace = f"{current_namespace}.{name}".strip(".")
             return json_data.get('id')
 
         # Update the current path and namespace
-        if json_data.get("ext") is not None:
-            # current_path = f"{current_path}/{json_data['name']}".lstrip("/")
+        if json_data.get("name") is not None:
             namespace_part = json_data["name"].replace(".py", "")
-            current_namespace = f"{current_namespace}.{namespace_part}".strip(".")
+            current_namespace = f"{current_namespace}.{namespace_part}".strip('.')
 
         # Recursively search children
         for key, value in json_data.items():
-            function_name = key
             if isinstance(value, (dict, list)):
-                result = find_function_by_path(value, target_namespace, current_namespace)
+                result = find_id_by_path(value, target_namespace, current_namespace)
                 if result:
                     return result
 
     elif isinstance(json_data, list):
         for item in json_data:
-            result = find_function_by_path(item, target_namespace, current_namespace)
+            result = find_id_by_path(item, target_namespace, current_namespace)
             if result:
                 return result
 
     return None
+
+
+def save_test_files(ai_response, base_dir="tests"):
+    lines = ai_response.splitlines()
+    current_file_path = None
+    file_content = []
+
+    for line in lines:
+        print(line)
+        if line.startswith("File:"):
+            # Save the previous file (if any)
+            if current_file_path and file_content:
+                full_path = os.path.join(base_dir, current_file_path)
+                os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                with open(full_path, "w", encoding="utf-8") as file:
+                    file.write("\n".join(file_content))
+                file_content = []
+
+            # Start a new file
+            current_file_path = line.replace("File:", "").strip()
+        elif line.startswith("Content:"):
+            continue  # Skip "Content:" line
+        elif line.startswith("```"): # Skip ``` :)))
+            continue
+        elif current_file_path:
+            file_content.append(line)
+
+    # Save the last file
+    if current_file_path and file_content:
+        full_path = os.path.join(base_dir, current_file_path)
+        # print(full_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, "w", encoding="utf-8") as file:
+            file.write("\n".join(file_content))
+
+    # print(f"Test files saved in '{base_dir}' directory.")

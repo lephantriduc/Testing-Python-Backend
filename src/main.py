@@ -24,7 +24,7 @@ from twisted.python.log import deferr
 from twisted.web.http import responses
 
 from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_element_by_id, \
-    extract_function_code, get_function_dependencies, find_function_by_path, get_file_info_from_id
+    extract_function_code, get_function_dependencies, find_id_by_path, get_file_info_from_id, save_test_files
 from src.randomize import randomize_type
 from src.utils import *
 from pydantic import BaseModel
@@ -238,7 +238,7 @@ async def get_function_info_from_path(repo_name: str, path_to_file: str):
     with open(json_file_path, 'r') as file:
         project_json = json.load(file)
 
-    function_info = find_function_by_path(project_json, path_to_file)
+    function_info = find_id_by_path(project_json, path_to_file)
 
     return function_info
 
@@ -257,18 +257,20 @@ async def get_dependencies(repo_name: str, function_id: str):
     dependency_data = await get_dependency_edges(repo_name)
     function_info = await get_json_element_info(repo_name, function_id)
 
-    function_namespace = function_info['function_namespace']
+    # Parsing file path into the form in /dependency-analysis/
+    file_path = function_info.get('file_path')
+    file_path = file_path.replace('.py', '').replace('/', '.')
+    file_path += '.' + function_info.get('metadata').get('name')
+    file_path = remove_duplicate_prefix(file_path)
 
-    function_namespace = remove_duplicate_prefix(function_namespace)
-
-    return get_function_dependencies(function_namespace, dependency_data)
+    return get_function_dependencies(file_path, dependency_data)
 
 @app.get("/get-code")
 async def get_code(repo_name: str, function_id: str):
     function_info = await get_json_element_info(repo_name, function_id)
 
-    path_to_file = function_info['file_path']
-    path_to_file = os.path.join(f'{UPLOAD_FOLDER}', path_to_file)
+    path_to_file = function_info['metadata']['absolute_path_to_file']
+    # path_to_file = os.path.join(f'{UPLOAD_FOLDER}', path_to_file)
     first_line = function_info['metadata']['first']
     last_line = function_info['metadata']['last']
 
@@ -288,9 +290,10 @@ async def get_dependencies_code(repo_name: str, function_id: str):
 
     for dependency in dependencies:
         dependency = add_duplicate_prefix(repo_name, dependency)
-        dependency_id = find_function_by_path(project_json, dependency)
+        dependency_id = find_id_by_path(project_json, dependency)
         if dependency_id is not None:
             dependencies_ids.append(dependency_id)
+    print(dependencies_ids)
 
     codes = []
     for dependency_id in dependencies_ids:
@@ -306,11 +309,8 @@ async def ai_gen_test(repo_name: str, function_id: str):
     dependency_code = await get_dependencies_code(repo_name, function_id)
 
     response = generate_test_with_ai(main_code, dependency_code)
+
+    # Parse response and save test files into a folder `tests`
+    save_test_files(response)
+
     return response
-
-    # return main_code, dependency_code
-
-# if __name__ == '__main__':
-    # print("""
-    # "To create a thorough set of unit tests for the given code, we should test both the `multiply` function and its dependency, the `add` function. The primary goal is to ensure that both functions work correctly across typical cases, edge cases (such as zero or negative numbers), and any unusual scenarios that might arise. \n\nBelow, I've provided unit test cases using Python's `unittest` framework:\n\n```python\nimport unittest\n\ndef add(a, b):\n    return a + b\n\ndef multiply(a, b):\n    res = 0\n    for _ in range(b):\n        res = add(res, a)\n    return res\n\nclass TestMathOperations(unittest.TestCase):\n\n    # Tests for the add function\n    def test_add_positive_numbers(self):\n        self.assertEqual(add(2, 3), 5)\n\n    def test_add_negative_numbers(self):\n        self.assertEqual(add(-2, -3), -5)\n\n    def test_add_mixed_sign_numbers(self):\n        self.assertEqual(add(-2, 3), 1)\n\n    def test_add_with_zero(self):\n        self.assertEqual(add(0, 3), 3)\n        self.assertEqual(add(3, 0), 3)\n\n    # Tests for the multiply function\n    def test_multiply_positive_numbers(self):\n        self.assertEqual(multiply(2, 3), 6)\n\n    def test_multiply_negative_numbers(self):\n        self.assertEqual(multiply(-2, 3), -6)\n        self.assertEqual(multiply(2, -3), -6)\n        self.assertEqual(multiply(-2, -3), 6)\n\n    def test_multiply_with_zero(self):\n        self.assertEqual(multiply(0, 3), 0)\n        self.assertEqual(multiply(3, 0), 0)\n        self.assertEqual(multiply(0, 0), 0)\n\n    def test_multiply_with_one(self):\n        self.assertEqual(multiply(1, 5), 5)\n        self.assertEqual(multiply(5, 1), 5)\n        self.assertEqual(multiply(-1, 5), -5)\n        self.assertEqual(multiply(5, -1), -5)\n\n    def test_multiply_large_numbers(self):\n        self.assertEqual(multiply(123456, 0), 0)\n        self.assertEqual(multiply(1, 123456), 123456)\n\n    def test_multiply_float(self):\n        # The multiply function is designed for integers only\n        # Here you can check how the function would deal with floats\n        # but if you're strict about types, a TypeError should be applied.\n        with self.assertRaises(TypeError):\n            multiply(2.5, 3)\n\n    def test_multiply_non_integer(self):\n        # Ensure non-integers throw an error\n        with self.assertRaises(TypeError):\n            multiply('2', 3)\n\nif __name__ == '__main__':\n    unittest.main()\n```\n\n### Explanation\n\n1. **Dependency Tests (`add` function):**\n    - We test with positive numbers, negative numbers, mixed sign numbers, and zero as arguments for comprehensive coverage.\n\n2. **Main Function Tests (`multiply` function):**\n    - Again, we test with positive numbers, negative numbers, zero, and one.\n    - We also include checks for behavior with floats and non-integer inputs, expecting a `TypeError` since the function is intended for integers. Handling of this error will require adjustments to the `multiply` function.\n    \nThese tests aim to cover most common and edge cases for both functions, ensuring they behave correctly under different scenarios. Note that since `multiply` is currently only suited for integer operations, you may need to integrate type checks or casting within the function to handle inputs more robustly or intentionally raise errors on invalid types."
-    # """)

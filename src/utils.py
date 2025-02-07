@@ -15,6 +15,107 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
     )
 
     prompt = f"""
+    Q:
+    The following is the main code that requires unit tests:
+
+    Main Code:
+    def multiply(a, b):
+        res = 0
+        for _ in range(abs(b)):
+            res = add(res, a)
+        return res if b > 0 else -res
+
+    The main code depends on the following dependency code(s). Inspect these as they may influence the
+    behavior of the main code and require their own unit tests:
+
+    def add(a, b):
+        return a + b
+
+    Your task:
+    1. Generate separate unit test files for the main code and its dependencies. 
+    2. Use the naming convention `test_<module_or_function_name>.py`.
+    3. Organize the test files in folders based on the original project structure, e.g., `tests/utils/test_math_utils.py`.
+    4. Ensure the test cases cover edge cases, typical usage, and error scenarios.
+    5. Provide the test cases in Python-compatible format, using `unittest` or `pytest`.
+
+    Strictly follow the example below. Do not add any redundant sentences.
+    A:
+    File: tests/utils/test_add.py
+    ```
+    import unittest
+
+    def add(a, b):
+        return a + b
+
+    class TestAdd(unittest.TestCase):
+        
+        def test_add_positive_numbers(self):
+            self.assertEqual(add(2, 3), 5)
+
+        def test_add_negative_numbers(self):
+            self.assertEqual(add(-1, -1), -2)
+
+        def test_add_positive_and_negative(self):
+            self.assertEqual(add(-1, 1), 0)
+
+        def test_add_zero(self):
+            self.assertEqual(add(0, 0), 0)
+            self.assertEqual(add(5, 0), 5)
+            self.assertEqual(add(0, 5), 5)
+
+        def test_add_large_numbers(self):
+            self.assertEqual(add(1_000_000, 1_000_000), 2_000_000)
+
+    if __name__ == '__main__':
+        unittest.main()
+    ```
+    
+    File: tests/utils/test_multiply.py
+    ```
+    import unittest
+
+    def add(a, b):
+        return a + b
+
+    def multiply(a, b):
+        res = 0
+        for _ in range(abs(b)):
+            res = add(res, a)
+        return res if b > 0 else -res
+
+    class TestMultiply(unittest.TestCase):
+        
+        def test_multiply_positive_numbers(self):
+            self.assertEqual(multiply(3, 4), 12)
+
+        def test_multiply_negative_numbers(self):
+            self.assertEqual(multiply(-3, -4), 12)
+
+        def test_multiply_positive_and_negative(self):
+            self.assertEqual(multiply(-3, 4), -12)
+            self.assertEqual(multiply(3, -4), -12)
+
+        def test_multiply_with_zero(self):
+            self.assertEqual(multiply(0, 5), 0)
+            self.assertEqual(multiply(5, 0), 0)
+            self.assertEqual(multiply(0, 0), 0)
+
+        def test_multiply_large_numbers(self):
+            self.assertEqual(multiply(1_000, 1_000), 1_000_000)
+
+        def test_multiply_by_one(self):
+            self.assertEqual(multiply(1, 999), 999)
+            self.assertEqual(multiply(999, 1), 999)
+
+        def test_multiply_by_negative_one(self):
+            self.assertEqual(multiply(-1, 999), -999)
+            self.assertEqual(multiply(999, -1), -999)
+
+    if __name__ == '__main__':
+        unittest.main()
+    ```
+    
+    Q:
     The following is the main code that requires unit tests:
 
     Main Code:
@@ -22,16 +123,15 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
 
     The main code depends on the following dependency code(s). Inspect these as they may influence the
     behavior of the main code and require their own unit tests:
-
-    {formatted_dependencies}
+    
+    {dependency_code}
 
     Your task:
-    1. Generate unit tests for the main code.
-    2. If the dependencies include any functions or logic that influence the main code, 
-    generate unit tests for those dependencies as well.
-    3. Ensure the test cases cover edge cases, typical usage, and error scenarios.
-
-    Provide the test cases in a Python-compatible format, using `unittest` or `pytest`.
+    1. Generate separate unit test files for the main code and its dependencies. 
+    2. Use the naming convention `test_<module_or_function_name>.py`.
+    3. Organize the test files in folders based on the original project structure, e.g., `tests/utils/test_math_utils.py`.
+    4. Ensure the test cases cover edge cases, typical usage, and error scenarios.
+    5. Provide the test cases in Python-compatible format, using `unittest` or `pytest`.
     """
 
     chat_completion = client.chat.completions.create(
@@ -45,65 +145,3 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
     )
 
     return chat_completion.choices[0].message.content
-
-
-def generate_with_file():
-    global all_messages
-    my_file = client.files.create(
-        file=Path("uploads/d.py/d.py"),
-        purpose="assistants",
-    )
-
-    my_assistant = client.beta.assistants.create(
-        model="gpt-4o",
-        instructions="You are a file analyze chatbot. Use your knowledge base to best respond to file uploads.",
-        name="File Analyze Chatbot",
-        tools=[{"type": "file_search"}]
-    )
-
-    my_thread = client.beta.threads.create()
-
-    my_thread_message = client.beta.threads.messages.create(
-        thread_id=my_thread.id,
-        role="user",
-        content="Generate a unit test file for the uploaded file.",
-        attachments=[{'file_id': my_file.id, 'tools': [{'type': 'file_search'}]}]
-    )
-
-    my_run = client.beta.threads.runs.create(
-        thread_id=my_thread.id,
-        assistant_id=my_assistant.id
-    )
-    print(f"This is the run object: {my_run} \n")
-
-    while my_run.status in ["queued", "in_progress"]:
-        keep_retrieving_run = client.beta.threads.runs.retrieve(
-            thread_id=my_thread.id,
-            run_id=my_run.id
-        )
-        print(f"Run status: {keep_retrieving_run.status}")
-
-        if keep_retrieving_run.status == "completed":
-            print("\n")
-
-            # Step 7: Retrieve the Messages added by the Assistant to the Thread
-            all_messages = client.beta.threads.messages.list(
-                thread_id=my_thread.id
-            )
-
-            print("------------------------------------------------------------ \n")
-
-            print(f"User: {my_thread_message.content[0].text.value}")
-            print(f"Assistant: {all_messages.data[0].content[0].text.value}")
-
-            break
-        elif keep_retrieving_run.status == "queued" or keep_retrieving_run.status == "in_progress":
-            pass
-        else:
-            print(f"Run status: {keep_retrieving_run.status}")
-            break
-
-    return {
-        "User:" : my_thread_message.content[0].text.value,
-        "Assistant:" : all_messages.data[0].content[0].text.value
-    }
