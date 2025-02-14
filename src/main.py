@@ -16,6 +16,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
+from concurrent.futures import ThreadPoolExecutor
 from fastapi.middleware.cors import CORSMiddleware
 from hyperlink.hypothesis import paths
 from multipart import file_path
@@ -29,7 +30,10 @@ from src.randomize import randomize_type
 from src.utils import *
 from pydantic import BaseModel
 
+
 app = FastAPI()
+executor = ThreadPoolExecutor(max_workers=10)
+
 
 UPLOAD_FOLDER = "./uploads"
 TEST_RESULT_FOLDER = "./test-results"
@@ -295,7 +299,7 @@ async def get_dependencies_code(repo_name: str, function_id: str):
             dependencies_ids.append(dependency_id)
     print(dependencies_ids)
 
-    codes = []
+    codes: list[str] = []
     for dependency_id in dependencies_ids:
         code = await get_code(repo_name, dependency_id)
         codes.append(code)
@@ -304,11 +308,16 @@ async def get_dependencies_code(repo_name: str, function_id: str):
 
 @app.get("/ai-gen-test")
 async def ai_gen_test(repo_name: str, function_id: str):
-
     main_code = await get_code(repo_name, function_id)
     dependency_code = await get_dependencies_code(repo_name, function_id)
 
-    response = generate_test_with_ai(main_code, dependency_code)
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(
+        executor, generate_test_with_ai, main_code, dependency_code
+    )
+
+    info = await get_json_element_info(repo_name, function_id)
+    return reformat_gpt_response(result, info['file_path'])
 
     # Parse response and save test files into a folder `tests`
     save_test_files(response)

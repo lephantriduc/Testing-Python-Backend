@@ -74,7 +74,7 @@ def _get_folder_tree(path: str, cur_full_path: str) -> dict:
 
     name = os.path.basename(path)
     cur_full_path = os.path.join(cur_full_path, name)
-    id = hashlib.sha256(cur_full_path.encode()).hexdigest()
+    id = hashlib.md5(cur_full_path.encode()).hexdigest()
     if os.path.isdir(path):
         return {
             "id": id,
@@ -160,9 +160,9 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
 
         for cfg in class_cfgs:
             full_name = name + '.' + cfg.name
-            id = hashlib.sha256(full_name.encode()).hexdigest()
+            id = hashlib.md5(full_name.encode()).hexdigest()
             structure[cfg.name] = {
-                'id': hashlib.sha256(full_name.encode()).hexdigest(),
+                'id': hashlib.md5(full_name.encode()).hexdigest(),
                 'type': parent_type + ':class',
                 'first': data[full_name]['first'],
                 'last': data[full_name]['last'],
@@ -178,10 +178,10 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
 
         for cfg in function_cfgs:
             full_name = name + '.' + cfg.name
-            id = hashlib.sha256(full_name.encode()).hexdigest()
+            id = hashlib.md5(full_name.encode()).hexdigest()
             tpe = 'method' if parent_type.split(':')[-1] == 'class' else 'function'
             structure[cfg.name] = {
-                'id': hashlib.sha256(full_name.encode()).hexdigest(),
+                'id': hashlib.md5(full_name.encode()).hexdigest(),
                 'type': parent_type + ':' + tpe,
                 'first': data[full_name]['first'],
                 'last': data[full_name]['last'],
@@ -261,7 +261,7 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
 
         for cfg in class_cfgs:
             full_name = name + '.' + cfg.name
-            id = hashlib.sha256(full_name.encode()).hexdigest()
+            id = hashlib.md5(full_name.encode()).hexdigest()
             structure.append( {
                 'id': id,
                 'name': cfg.name,
@@ -274,7 +274,7 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
 
         for cfg in function_cfgs:
             full_name = name + '.' + cfg.name
-            id = hashlib.sha256(full_name.encode()).hexdigest()
+            id = hashlib.md5(full_name.encode()).hexdigest()
             tpe = 'method' if parent_type.split(':')[-1] == 'class' else 'function'
             structure.append({
                 'id': id,
