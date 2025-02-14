@@ -24,9 +24,8 @@ from pyexpat.errors import messages
 from twisted.python.log import deferr
 from twisted.web.http import responses
 
-from src.parse import get_full_structure, dependency_analysis, get_type_inference, find_element_by_id, \
-    extract_function_code, get_function_dependencies, find_id_by_path, get_file_info_from_id, save_test_files
 from src.randomize import randomize_type
+from src.parse import *
 from src.utils import *
 from pydantic import BaseModel
 
@@ -317,9 +316,7 @@ async def ai_gen_test(repo_name: str, function_id: str):
     )
 
     info = await get_json_element_info(repo_name, function_id)
+
+    # Print out test script for coverage analysis?
+
     return reformat_gpt_response(result, info['file_path'])
-
-    # Parse response and save test files into a folder `tests`
-    save_test_files(response)
-
-    return response

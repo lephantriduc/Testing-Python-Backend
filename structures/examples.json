@@ -1,376 +1,235 @@
 {
-  "id": "c590b3c924c35c2f241746522284e4709df490d73a38aaa7d6de4ed1eac2f546",
+  "id": "bfebe34154a0dfd9fc7b447fc9ed74e9",
   "name": "examples",
   "type": "folder",
   "full_path": "examples",
   "ext": ".",
   "children": [
     {
-      "id": "944c6c33b76162300f3bd613bcac50ba37d41d39673eafd89f386ede49c196a2",
-      "name": "examples",
+      "id": "3362f201d20df305e0192262088b9ef8",
+      "name": "pytest.ini",
+      "type": "file",
+      "full_path": "examples/pytest.ini",
+      "ext": ".ini",
+      "children": []
+    },
+    {
+      "id": "03f5c258e10afc90b009da570f6d8b44",
+      "name": "justfile",
+      "type": "file",
+      "full_path": "examples/justfile",
+      "ext": "",
+      "children": []
+    },
+    {
+      "id": "142b38891d3da95a45f01f6d585339f7",
+      "name": "main.py",
+      "type": "file",
+      "full_path": "examples/main.py",
+      "ext": ".py",
+      "children": []
+    },
+    {
+      "id": "535a2a53053ce8a9c56f99a82fa0a123",
+      "name": "src",
       "type": "folder",
-      "full_path": "examples/examples",
+      "full_path": "examples/src",
       "ext": ".",
       "children": [
         {
-          "id": "70a17daf580bac2ce5b85a554b681ef61000ce74a8050576ef09c14884e028e0",
-          "name": "pytest.ini",
+          "id": "745c945bb14160927256ee4da2002a5f",
+          "name": "__init__.py",
           "type": "file",
-          "full_path": "examples/examples/pytest.ini",
-          "ext": ".ini",
-          "children": []
-        },
-        {
-          "id": "17038b90cf5e3319f22e3ec7c80dc2f7d9752fff9f98c451ff4c0d15c943caf0",
-          "name": "main.py",
-          "type": "file",
-          "full_path": "examples/examples/main.py",
+          "full_path": "examples/src/__init__.py",
           "ext": ".py",
           "children": []
         },
         {
-          "id": "44fb51c0996393ad77270c3736d78d41394d1c36d6f9ae0cd13ad671352701d1",
-          "name": "justfile",
+          "id": "97aee5b38fe79d2db13835289f60961d",
+          "name": "param.py",
           "type": "file",
-          "full_path": "examples/examples/justfile",
-          "ext": "",
-          "children": []
-        },
-        {
-          "id": "78af8ba4da2d53fa4174f92313ca3be34755bd4fc6bda52c145e8729390144ef",
-          "name": ".pytest_cache",
-          "type": "folder",
-          "full_path": "examples/examples/.pytest_cache",
-          "ext": ".",
+          "full_path": "examples/src/param.py",
+          "ext": ".py",
           "children": [
             {
-              "id": "27667ddfa4dd9ea0960ae13f6d526353686fb9b91905b0a849c75b9b503c9803",
-              "name": "CACHEDIR.TAG",
-              "type": "file",
-              "full_path": "examples/examples/.pytest_cache/CACHEDIR.TAG",
-              "ext": ".TAG",
-              "children": []
+              "id": "7f759a86cb4ed592cbfe54826e577b89",
+              "name": "gcd",
+              "absolute_path_to_file": "./uploads/examples/src/param.py",
+              "type": ":function",
+              "first": 1,
+              "last": 7,
+              "children": {}
             },
             {
-              "id": "214b7c8572e4fcad5ed82f0f66f15a3f3f96c5f05662c3076ecc8168d9a27329",
-              "name": "v",
-              "type": "folder",
-              "full_path": "examples/examples/.pytest_cache/v",
-              "ext": ".",
-              "children": [
-                {
-                  "id": "8077122d17d0c98a695f33708a38a8d98d1aa617e1ed74dcbf96d97674046ff5",
-                  "name": "cache",
-                  "type": "folder",
-                  "full_path": "examples/examples/.pytest_cache/v/cache",
-                  "ext": ".",
-                  "children": [
-                    {
-                      "id": "dc07534a33c240f9cc5da9fb03be77e0a60f0460d8030f19a0ea246b6341f0fa",
-                      "name": "stepwise",
-                      "type": "file",
-                      "full_path": "examples/examples/.pytest_cache/v/cache/stepwise",
-                      "ext": "",
-                      "children": []
-                    },
-                    {
-                      "id": "8c149fc35d8ee16c1053ab7fd9a43c2c95123be63037a32f0088018883683a4d",
-                      "name": "lastfailed",
-                      "type": "file",
-                      "full_path": "examples/examples/.pytest_cache/v/cache/lastfailed",
-                      "ext": "",
-                      "children": []
-                    },
-                    {
-                      "id": "567eec167b7380ac936ce48ba04f4c6827060b4f2ebf0d67ccba27e068222c96",
-                      "name": "nodeids",
-                      "type": "file",
-                      "full_path": "examples/examples/.pytest_cache/v/cache/nodeids",
-                      "ext": "",
-                      "children": []
-                    }
-                  ]
-                }
-              ]
+              "id": "ff2a0c40ac1f3bb08da74386af3684dd",
+              "name": "divisible_by_32",
+              "absolute_path_to_file": "./uploads/examples/src/param.py",
+              "type": ":function",
+              "first": 10,
+              "last": 15,
+              "children": {}
             },
             {
-              "id": "2b16a128e6227d0d4ef69d816714d8033c7bd65c9c060e21257ccc62809d1637",
-              "name": ".gitignore",
-              "type": "file",
-              "full_path": "examples/examples/.pytest_cache/.gitignore",
-              "ext": ".gitignore",
-              "children": []
+              "id": "fc70f97ecf81d8c9581eccffc060725d",
+              "name": "str_splitter",
+              "absolute_path_to_file": "./uploads/examples/src/param.py",
+              "type": ":function",
+              "first": 18,
+              "last": 23,
+              "children": {}
             },
             {
-              "id": "33bdb2467b0b701e1accc02c7a83bafe77b64cae661c572f1110ddbcb0ed4a5a",
-              "name": "README.md",
-              "type": "file",
-              "full_path": "examples/examples/.pytest_cache/README.md",
-              "ext": ".md",
-              "children": []
+              "id": "528ca0ab483aa52a1cdfd7c9b321fb8d",
+              "name": "foo",
+              "absolute_path_to_file": "./uploads/examples/src/param.py",
+              "type": ":function",
+              "first": 26,
+              "last": 27,
+              "children": {}
+            },
+            {
+              "id": "7182615e1b72813bc90b3ecdd4b2e6c8",
+              "name": "bar",
+              "absolute_path_to_file": "./uploads/examples/src/param.py",
+              "type": ":function",
+              "first": 30,
+              "last": 31,
+              "children": {}
             }
           ]
         },
         {
-          "id": "6b4c07298506002b36d44194eca09f474d633e0d585101efb6fdd74ece94fc7c",
-          "name": "src",
-          "type": "folder",
-          "full_path": "examples/examples/src",
-          "ext": ".",
+          "id": "4a56cbdf1314984b6e11996f078d556f",
+          "name": "z_func.py",
+          "type": "file",
+          "full_path": "examples/src/z_func.py",
+          "ext": ".py",
           "children": [
             {
-              "id": "846aab52bf43f1bfbd1258ab1b16c521868f65e367f0dfe98a5292f5ea9ec496",
-              "name": "colleso.py",
-              "type": "file",
-              "full_path": "examples/examples/src/colleso.py",
-              "ext": ".py",
-              "children": [
-                {
-                  "id": "2fd71980fbc998f32e224864c324e8da1ca11d12ee8b9ebd2f513c56cd9dd2d5",
-                  "name": "nested_list",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 9,
-                  "last": 12,
-                  "children": {}
-                },
-                {
-                  "id": "5fbc3d13b3922ecb767e1b466e5e9c31c779310de6e20ef20739c1e89d161ec2",
-                  "name": "nested_no_param",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 15,
-                  "last": 18,
-                  "children": {}
-                },
-                {
-                  "id": "e778a57f9006bab746d81a7bce23b1ae8b322b66cd49743326517e2c9658f9ef",
-                  "name": "list_union",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 21,
-                  "last": 23,
-                  "children": {}
-                },
-                {
-                  "id": "3de0b8b03d7eb80cfb236d9b4ec61bd9ee460fe85120d7cc951bac99bf75ea1c",
-                  "name": "check_tuple",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 26,
-                  "last": 28,
-                  "children": {}
-                },
-                {
-                  "id": "1644cbac8e45d9320dc0192cae43ba272ea59c275863665fe37f1b1f990cf123",
-                  "name": "untyped_tuple",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 31,
-                  "last": 33,
-                  "children": {}
-                },
-                {
-                  "id": "609ce16d07d356ebe1596f54ae4e8a6f3f9bbe263769bb520bdc0be0bbd92c55",
-                  "name": "untyped_list",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 36,
-                  "last": 38,
-                  "children": {}
-                },
-                {
-                  "id": "9cda85ca84a8d59d0ed0e935f0dcf56a1c85964d26535286c598d5398dc80a83",
-                  "name": "dict_str_int",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/colleso.py",
-                  "type": ":function",
-                  "first": 41,
-                  "last": 43,
-                  "children": {}
-                }
-              ]
+              "id": "04dddc6d1a8ec480fcff5b622b145f0f",
+              "name": "z_func",
+              "absolute_path_to_file": "./uploads/examples/src/z_func.py",
+              "type": ":function",
+              "first": 1,
+              "last": 16,
+              "children": {}
+            }
+          ]
+        },
+        {
+          "id": "6b5ce681738b67eee10a876e83a66ad4",
+          "name": "difficult.py",
+          "type": "file",
+          "full_path": "examples/src/difficult.py",
+          "ext": ".py",
+          "children": [
+            {
+              "id": "8cd2637b122f53e0a310bc3463d6b6e5",
+              "name": "difficult_branches",
+              "absolute_path_to_file": "./uploads/examples/src/difficult.py",
+              "type": ":function",
+              "first": 9,
+              "last": 23,
+              "children": {}
+            }
+          ]
+        },
+        {
+          "id": "0f0f447777a5c2d68107d81bc7de9f81",
+          "name": "claso.py",
+          "type": "file",
+          "full_path": "examples/src/claso.py",
+          "ext": ".py",
+          "children": [
+            {
+              "id": "d67551310a99300ad2035aee95ebe9de",
+              "name": "Creature",
+              "absolute_path_to_file": "./uploads/examples/src/claso.py",
+              "type": ":class",
+              "first": 4,
+              "last": 12,
+              "children": {}
             },
             {
-              "id": "f5a1b0a357ff52f1f54c153483c76b2c86d96cef7a4fa5bf5880e99f7a0adaf7",
-              "name": "__pycache__",
-              "type": "folder",
-              "full_path": "examples/examples/src/__pycache__",
-              "ext": ".",
-              "children": [
-                {
-                  "id": "095efbe5a0d808980584dd4a0226e22d8c0ee996fcd08fe7ee1131673380c6ed",
-                  "name": "difficult.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/difficult.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                },
-                {
-                  "id": "ad2de7806f63d3681fa8d50ac30cd98aaf022a074bd92697bb594e3eebd175e1",
-                  "name": "__init__.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/__init__.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                },
-                {
-                  "id": "869e5e1bd766077c638f9c40e244b39a3462de85fc91e9aa36a2b6e4c8629098",
-                  "name": "param.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/param.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                },
-                {
-                  "id": "1fd6fa5c203d45574659bddea1e4fedd00f1b72cc784096a4b944bf5e5d04b8b",
-                  "name": "claso.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/claso.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                },
-                {
-                  "id": "072314663b0b69ea8eff302995ed2969b897c7dfc39f9aa8c2a003ee4f358821",
-                  "name": "z_func.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/z_func.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                },
-                {
-                  "id": "2f8a0bdbdcf87905f87e2a1cf9cff5c6255bc319eeba5dbb4381e13cda8d7d51",
-                  "name": "colleso.cpython-310.pyc",
-                  "type": "file",
-                  "full_path": "examples/examples/src/__pycache__/colleso.cpython-310.pyc",
-                  "ext": ".pyc",
-                  "children": []
-                }
-              ]
+              "id": "6e833c4e36e59f7279b973f3a1b6b4ad",
+              "name": "Human",
+              "absolute_path_to_file": "./uploads/examples/src/claso.py",
+              "type": ":class",
+              "first": 15,
+              "last": 24,
+              "children": {}
+            }
+          ]
+        },
+        {
+          "id": "72c668810c514780a2b2ce1e3ba5e49f",
+          "name": "colleso.py",
+          "type": "file",
+          "full_path": "examples/src/colleso.py",
+          "ext": ".py",
+          "children": [
+            {
+              "id": "d622eed92220472328830d3c99c06ffd",
+              "name": "nested_list",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 9,
+              "last": 12,
+              "children": {}
             },
             {
-              "id": "ac9281536c6913e149a4174d62764e74121f98ddee1c4b6a27e4275f714512c4",
-              "name": "param.py",
-              "type": "file",
-              "full_path": "examples/examples/src/param.py",
-              "ext": ".py",
-              "children": [
-                {
-                  "id": "0b9abe55de517805c6b179eae44443412565deed891ca56b528c486cae159835",
-                  "name": "gcd",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/param.py",
-                  "type": ":function",
-                  "first": 1,
-                  "last": 7,
-                  "children": {}
-                },
-                {
-                  "id": "ddac24c9caff2893d715bf2ceff73c1c1db3faaa819ea048ed8e30b02f2d8734",
-                  "name": "divisible_by_32",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/param.py",
-                  "type": ":function",
-                  "first": 10,
-                  "last": 15,
-                  "children": {}
-                },
-                {
-                  "id": "ceb35b17b1e101831ebeebb6f1e9f532e0102b5cdecf4ba9f652df67180e4ac6",
-                  "name": "str_splitter",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/param.py",
-                  "type": ":function",
-                  "first": 18,
-                  "last": 23,
-                  "children": {}
-                },
-                {
-                  "id": "353265e776abba3902a7f6e6f1307599a7504d923c63dca82687e8de7acb94a6",
-                  "name": "foo",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/param.py",
-                  "type": ":function",
-                  "first": 26,
-                  "last": 27,
-                  "children": {}
-                },
-                {
-                  "id": "992f37e3a1ff859d2389fefc167d45e8afb16611472dfde8e08596a41ecc6db7",
-                  "name": "bar",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/param.py",
-                  "type": ":function",
-                  "first": 30,
-                  "last": 31,
-                  "children": {}
-                }
-              ]
+              "id": "b6643e4afde51280bd7fd402322e044c",
+              "name": "nested_no_param",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 15,
+              "last": 18,
+              "children": {}
             },
             {
-              "id": "74d0859c79de743205cf2985f2b914d04741de46a6d6f72bf57174a44c6b492d",
-              "name": "claso.py",
-              "type": "file",
-              "full_path": "examples/examples/src/claso.py",
-              "ext": ".py",
-              "children": [
-                {
-                  "id": "06091425642e51e6a13615a9c349acf910344da44c751aebce50f26f515d450c",
-                  "name": "Creature",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/claso.py",
-                  "type": ":class",
-                  "first": 4,
-                  "last": 12,
-                  "children": {}
-                },
-                {
-                  "id": "c7df674dbadc2a7e20476d44340857b38f5f43efe0e4bd738b4bf0ab411fa27b",
-                  "name": "Human",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/claso.py",
-                  "type": ":class",
-                  "first": 15,
-                  "last": 24,
-                  "children": {}
-                }
-              ]
+              "id": "0a266abc4e3adce9e098b16c96b1883a",
+              "name": "list_union",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 21,
+              "last": 23,
+              "children": {}
             },
             {
-              "id": "9fa37ce88d23c9c6b6fe7e92f8a1b7761edb00288f815a0890a167a9bd3fb877",
-              "name": "__init__.py",
-              "type": "file",
-              "full_path": "examples/examples/src/__init__.py",
-              "ext": ".py",
-              "children": []
+              "id": "3892e4519a76275840d6d5b8241e6612",
+              "name": "check_tuple",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 26,
+              "last": 28,
+              "children": {}
             },
             {
-              "id": "1a0630fedbdc7d3d3464ca706bb3e5912fce8ff6b645f45ac27cb20f4ce4d8c7",
-              "name": "difficult.py",
-              "type": "file",
-              "full_path": "examples/examples/src/difficult.py",
-              "ext": ".py",
-              "children": [
-                {
-                  "id": "285ae7b5990aa88dc1cad9772424e8c65b01cc29286e6ece56c103440f302592",
-                  "name": "difficult_branches",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/difficult.py",
-                  "type": ":function",
-                  "first": 9,
-                  "last": 23,
-                  "children": {}
-                }
-              ]
+              "id": "44a8be7db92782bc464e1883bc4a1d86",
+              "name": "untyped_tuple",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 31,
+              "last": 33,
+              "children": {}
             },
             {
-              "id": "9f32f8bba3ca3db810f239c04d58dfb7844c668f746084285b118a469095dd48",
-              "name": "z_func.py",
-              "type": "file",
-              "full_path": "examples/examples/src/z_func.py",
-              "ext": ".py",
-              "children": [
-                {
-                  "id": "144b8c4b94d40085b7d5312b635762bb4f82ea47d4309a67baff2f2e1d317923",
-                  "name": "z_func",
-                  "absolute_path_to_file": "./uploads/examples/examples/src/z_func.py",
-                  "type": ":function",
-                  "first": 1,
-                  "last": 16,
-                  "children": {}
-                }
-              ]
+              "id": "11e1db8b75f584bc5d9cc4fd90f912d8",
+              "name": "untyped_list",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 36,
+              "last": 38,
+              "children": {}
+            },
+            {
+              "id": "4af369d8ec36e01b132f4720a3b7fad3",
+              "name": "dict_str_int",
+              "absolute_path_to_file": "./uploads/examples/src/colleso.py",
+              "type": ":function",
+              "first": 41,
+              "last": 43,
+              "children": {}
             }
           ]
         }

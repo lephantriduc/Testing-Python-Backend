@@ -1,13 +1,18 @@
 import os
+import json
 import hashlib
 from http.client import responses
 from tkinter.font import names
 
+from multipart import file_path
 from networkx import goldberg_radzik
+from pygments.lexers import find_lexer_class_by_name
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
 from scalpel.import_graph.import_graph import ImportGraph, Tree
 from scalpel.typeinfer.typeinfer import TypeInference
+
+
 # from uvloop.includes.system import ntohl
 
 
@@ -51,6 +56,7 @@ def _get_folder_tree(path: str) -> dict:
             "ext": ext,
             "children": []
         }
+
 
 def _get_folder_tree(path: str, cur_full_path: str) -> dict:
     """
@@ -199,6 +205,7 @@ def _construct_pyfile_children(package: str, file: str) -> dict:
 
     return structure, hashmap
 
+
 def _construct_pyfile_children_list(package: str, file: str) -> list:
     """
     Get all functions with their respective offset (first, last).
@@ -262,7 +269,7 @@ def _construct_pyfile_children_list(package: str, file: str) -> list:
         for cfg in class_cfgs:
             full_name = name + '.' + cfg.name
             id = hashlib.md5(full_name.encode()).hexdigest()
-            structure.append( {
+            structure.append({
                 'id': id,
                 'name': cfg.name,
                 'absolute_path_to_file': file,
@@ -341,6 +348,7 @@ def get_type_inference(file_name: str, entry_point: str) -> list[dict]:
 
     return inferred
 
+
 def find_element_by_id(json_data, id, current_path=""):
     """
     Recursively searches for a JSON element by its ID in the given JSON structure.
@@ -378,12 +386,14 @@ def find_element_by_id(json_data, id, current_path=""):
 
     return None
 
+
 def get_file_info_from_id(json_data, id):
     result = find_element_by_id(json_data, id)
     if result.get('metadata').get('type') == 'file':
         return result.get('metadata')
     else:
         return None
+
 
 def extract_function_code(file_path, start_line, end_line):
     """
@@ -403,6 +413,7 @@ def extract_function_code(file_path, start_line, end_line):
     except Exception as e:
         return f"Error reading file: {e}"
 
+
 def get_function_dependencies(function_name, dependency_data):
     """
     Retrieves all functions called by the given function based on dependency analysis.
@@ -420,6 +431,7 @@ def get_function_dependencies(function_name, dependency_data):
             called_functions.append(callee)
 
     return called_functions
+
 
 def find_id_by_path(json_data, target_namespace, current_namespace=""):
     """
@@ -459,37 +471,109 @@ def find_id_by_path(json_data, target_namespace, current_namespace=""):
     return None
 
 
-def save_test_files(ai_response, base_dir="tests"):
-    lines = ai_response.splitlines()
-    current_file_path = None
-    file_content = []
+def suite_to_script(suite: dict) -> str:
+    # TODO: The import line is still **HARD-CODED** for the upload folder. Might do smth about it later?
+    # Importing UPLOAD_FOLDER from `src.main` will cause a circular import.
+    module_path = suite["module_path"].replace("/", ".").removesuffix(".py")
+    module_path = 'uploads.' + module_path
+    object_name = suite["object_name"]
 
-    for line in lines:
-        print(line)
-        if line.startswith("File:"):
-            # Save the previous file (if any)
-            if current_file_path and file_content:
-                full_path = os.path.join(base_dir, current_file_path)
-                os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                with open(full_path, "w", encoding="utf-8") as file:
-                    file.write("\n".join(file_content))
-                file_content = []
+    test_cases = suite["test_cases"]
 
-            # Start a new file
-            current_file_path = line.replace("File:", "").strip()
-        elif line.startswith("Content:"):
-            continue  # Skip "Content:" line
-        elif line.startswith("```"): # Skip ``` :)))
-            continue
-        elif current_file_path:
-            file_content.append(line)
+    test_script = f"""
+import unittest
+from {module_path} import {object_name}
 
-    # Save the last file
-    if current_file_path and file_content:
-        full_path = os.path.join(base_dir, current_file_path)
-        # print(full_path)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        with open(full_path, "w", encoding="utf-8") as file:
-            file.write("\n".join(file_content))
+class {object_name}Test(unittest.TestCase):
+    """
 
-    # print(f"Test files saved in '{base_dir}' directory.")
+    for i, case in enumerate(test_cases):
+        test_args = case["test_args"]
+        exception = case["exception"]
+        return_value = case["return_value"]
+
+        test_script += f"""
+    def test_{i}(self):
+        """
+
+        if exception:
+            test_script += f"""
+        with self.assertRaises({exception}):
+            {object_name}({', '.join(map(str, test_args.values()))})
+        """
+        else:
+            test_script += f"""
+        self.assertEqual({object_name}({', '.join(map(str, test_args.values()))}), {return_value})
+        """
+
+    test_script += f"""
+if __name__ == "__main__":
+    unittest.main()
+    """
+
+    output_dir = '../uploads/' + suite["module_path"].split('/')[0] + '/tests'
+    # TODO: `script_file_name` should be more specific but whatever.
+    # script_file_name = f"test_{suite['module_path'].replace('/', '.').removesuffix('.py')}.{object_name}.py"
+    script_file_name = f"{object_name}_test.py"
+    save_test_script(test_script, script_file_name, output_dir)
+
+    return test_script
+
+
+def save_test_script(script: str, script_file_name: str, output_dir: str) -> None:
+    os.makedirs(output_dir, exist_ok=True)
+    print(output_dir)
+
+    with open(f"{output_dir}/{script_file_name}", "w") as f:
+        f.write(script)
+
+    print(f"Test script saved to {output_dir} as {script_file_name}")
+
+
+if __name__ == "__main__":
+    eg_suite = {
+        "suite_id": "dbdc12b27836d3b5c4af04207d6463ae",
+        "module_path": "examples/src/param.py",
+        "object_name": "bar",
+        "object_type": "function",
+        "test_cases": [
+            {
+                "test_args": {
+                    "x": 4,
+                    "y": 2,
+                    "z": 10
+                },
+                "exception": None,
+                "return_value": 5
+            },
+            {
+                "test_args": {
+                    "x": 4,
+                    "y": 0,
+                    "z": 10
+                },
+                "exception": "ZeroDivisionError",
+                "return_value": None
+            },
+            {
+                "test_args": {
+                    "x": 8,
+                    "y": 2.5,
+                    "z": 20
+                },
+                "exception": None,
+                "return_value": 8
+            },
+            {
+                "test_args": {
+                    "x": 6,
+                    "y": -3,
+                    "z": 18
+                },
+                "exception": None,
+                "return_value": -2
+            }
+        ],
+        "coverage": "N/A"
+    }
+    print(suite_to_script(eg_suite))

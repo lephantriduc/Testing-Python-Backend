@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import time
+import subprocess
 from openai import OpenAI
 from dotenv import load_dotenv
 from src.testsuite import *
@@ -29,7 +30,7 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
     if dependency_code != []:
         prompt += (
             "As for context, here is other relevant codes that the object might depend on:\n"
-            f"```python\n{'\n\n'.join(dependency_code)}\n```\n"
+            f"```python\n{' '.join(dependency_code)}\n```\n"
         )
 
     chat_completion = client.beta.chat.completions.parse(
@@ -41,7 +42,7 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
     return chat_completion.choices[0].message.parsed
 
 
-def pyvalue_interprete(x: PyValue):
+def pyvalue_interpret(x: PyValue):
     val_type, val = x.value_type, x.encoded_value
     if val.startswith('"') and val.endswith('"'):
         val = val[1:-1]
@@ -62,7 +63,7 @@ def pyvalue_interprete(x: PyValue):
         return json.loads(val)
 
 
-def reformat_gpt_response(suite: TestSuite, module_path: str):
+def reformat_gpt_response(suite: TestSuite, module_path: str) -> dict:
     id = hashlib.md5(f"{module_path}{time.time()}".encode()).hexdigest()
     
     res = {
@@ -77,7 +78,7 @@ def reformat_gpt_response(suite: TestSuite, module_path: str):
         e = {'test_args': {}}
         for arg in case.test_args:
             e['test_args'][arg.arg_name] = \
-                pyvalue_interprete(arg.arg_value)
+                pyvalue_interpret(arg.arg_value)
         behavior = case.return_value_or_exception
         if isinstance(behavior, PyException):
             e['exception'] = behavior.ex_type
@@ -85,9 +86,35 @@ def reformat_gpt_response(suite: TestSuite, module_path: str):
         else:
             e['exception'] = None
             e['return_value'] = \
-                pyvalue_interprete(behavior)
+                pyvalue_interpret(behavior)
         res['test_cases'].append(e)
     
     res['coverage'] = 'N/A'
 
     return res
+
+
+def run_coverage_and_get_results(tests_dir="../uploads/examples"):
+    coverage_file = os.path.join(tests_dir, ".coverage")
+
+    if os.path.exists(coverage_file):
+        os.remove(coverage_file)
+
+    # TODO: y bug
+    subprocess.run(["python", "-m", "coverage", "run", "-m", "unittest", "discover", 'src/tests'], cwd=tests_dir, check=True)
+    subprocess.run(["coverage", "json", "-o", os.path.join(tests_dir, "coverage.json")], check=True)
+
+    with open(os.path.join(tests_dir, "coverage.json"), "r") as f:
+        coverage_data = json.load(f)
+
+    # # Extract relevant coverage metrics
+    # covered_statements = coverage_data["totals"]["covered"]
+    # coverage_percentage = coverage_data["totals"]["percent"]
+    #
+    # return {
+    #     "covered_statements": covered_statements,
+    #     "coverage_percentage": coverage_percentage
+    # }
+
+if __name__ == "__main__":
+    print(run_coverage_and_get_results())
