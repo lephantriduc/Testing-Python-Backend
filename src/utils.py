@@ -28,9 +28,10 @@ def generate_test_with_ai(main_code: str, dependency_code: list[str]):
     )
 
     if dependency_code != []:
+        tmp = '\n\n'.join(dependency_code)
         prompt += (
             "As for context, here is other relevant codes that the object might depend on:\n"
-            f"```python\n{' '.join(dependency_code)}\n```\n"
+            f"```python\n{tmp}\n```\n"
         )
 
     chat_completion = client.beta.chat.completions.parse(
