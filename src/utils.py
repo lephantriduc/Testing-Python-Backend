@@ -3,8 +3,13 @@ import json
 import os
 import time
 import subprocess
+
 from openai import OpenAI
 from dotenv import load_dotenv
+from sphinx.util.rst import textwidth
+from twisted.logger import capturedLogs
+
+from src.parse import suite_to_script
 from src.testsuite import *
 
 load_dotenv()
@@ -75,6 +80,10 @@ def reformat_gpt_response(suite: TestSuite, module_path: str) -> dict:
         'test_cases': [],
     }
 
+    path_parts = module_path.split("/")
+    repo_name = path_parts[0]
+    path_to_file = '/'.join(path_parts[1:])
+
     for case in suite.test_cases:
         e = {'test_args': {}}
         for arg in case.test_args:
@@ -89,33 +98,33 @@ def reformat_gpt_response(suite: TestSuite, module_path: str) -> dict:
             e['return_value'] = \
                 pyvalue_interpret(behavior)
         res['test_cases'].append(e)
-    
-    res['coverage'] = 'N/A'
+
+    suite_to_script(res)
+
+    # print(repo_name, path_to_file)
+    # print(subprocess.run(["pwd"], capture_output=True, text=True))
+    cov_score = run_coverage_and_get_results(repo_name, path_to_file)
+    res['coverage'] = cov_score
 
     return res
 
 
-def run_coverage_and_get_results(tests_dir="../uploads/examples"):
+def run_coverage_and_get_results(repo_name, file_path):
+    tests_dir = f"uploads/{repo_name}"
     coverage_file = os.path.join(tests_dir, ".coverage")
 
     if os.path.exists(coverage_file):
         os.remove(coverage_file)
 
-    # TODO: y bug
-    subprocess.run(["python", "-m", "coverage", "run", "-m", "unittest", "discover", 'src/tests'], cwd=tests_dir, check=True)
-    subprocess.run(["coverage", "json", "-o", os.path.join(tests_dir, "coverage.json")], check=True)
+    subprocess.run(["coverage", "run", "-m", "pytest", "tests/"], cwd=tests_dir)
+    coverage_report = subprocess.run(["coverage", "report"], cwd=tests_dir, capture_output=True, text=True)
 
-    with open(os.path.join(tests_dir, "coverage.json"), "r") as f:
-        coverage_data = json.load(f)
+    with open(f"{tests_dir}/tests/coverage.log", "w") as f:
+        f.write(str(coverage_report.stdout))
 
-    # # Extract relevant coverage metrics
-    # covered_statements = coverage_data["totals"]["covered"]
-    # coverage_percentage = coverage_data["totals"]["percent"]
-    #
-    # return {
-    #     "covered_statements": covered_statements,
-    #     "coverage_percentage": coverage_percentage
-    # }
+    cov_score = subprocess.run(["awk", f'$1 == "{file_path}" {{print $NF+0}}', "coverage.log"], cwd=f"{tests_dir}/tests", capture_output=True, text=True).stdout
+
+    return cov_score.rstrip()
 
 if __name__ == "__main__":
-    print(run_coverage_and_get_results())
+    print(run_coverage_and_get_results("examples", "src/param.py"))

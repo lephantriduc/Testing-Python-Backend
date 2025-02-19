@@ -317,6 +317,4 @@ async def ai_gen_test(repo_name: str, function_id: str):
 
     info = await get_json_element_info(repo_name, function_id)
 
-    # Print out test script for coverage analysis?
-
     return reformat_gpt_response(result, info['file_path'])
