@@ -318,6 +318,7 @@ async def ai_gen_test(repo_name: str, function_id: str):
     info = await get_json_element_info(repo_name, function_id)
 
     first_response = reformat_gpt_response(first_result, info['file_path'], False)
+    first_response['function_id'] = function_id
     missed_lines = first_response['missed_lines']
 
     if missed_lines != "NONE":
@@ -328,6 +329,7 @@ async def ai_gen_test(repo_name: str, function_id: str):
 
 
         next_response = reformat_gpt_response(next_result, info['file_path'], True)
+        next_response['function_id'] = function_id
         print(f"COVERAGE BEFORE: {first_response['coverage']}")
         print(f"COVERAGE AFTER: {next_response['coverage']}")
 
