@@ -311,10 +311,26 @@ async def ai_gen_test(repo_name: str, function_id: str):
     dependency_code = await get_dependencies_code(repo_name, function_id)
 
     loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(
+    first_result = await loop.run_in_executor(
         executor, generate_test_with_ai, main_code, dependency_code
     )
 
     info = await get_json_element_info(repo_name, function_id)
 
-    return reformat_gpt_response(result, info['file_path'])
+    first_response = reformat_gpt_response(first_result, info['file_path'], False)
+    missed_lines = first_response['missed_lines']
+
+    if missed_lines != "NONE":
+
+        next_result = await loop.run_in_executor(
+            executor, regenerate_test_with_ai, main_code, dependency_code, missed_lines
+        )
+
+
+        next_response = reformat_gpt_response(next_result, info['file_path'], True)
+        print(f"COVERAGE BEFORE: {first_response['coverage']}")
+        print(f"COVERAGE AFTER: {next_response['coverage']}")
+
+        return next_response
+
+    return first_response

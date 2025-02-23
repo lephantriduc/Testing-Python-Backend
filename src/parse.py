@@ -7,10 +7,12 @@ from tkinter.font import names
 from multipart import file_path
 from networkx import goldberg_radzik
 from pygments.lexers import find_lexer_class_by_name
+from requests import options
 from scalpel.cfg import CFGBuilder, CFG
 from scalpel.call_graph.pycg import CallGraphGenerator
 from scalpel.import_graph.import_graph import ImportGraph, Tree
 from scalpel.typeinfer.typeinfer import TypeInference
+from twisted.conch.insults.insults import const
 
 
 # from uvloop.includes.system import ntohl
@@ -471,7 +473,7 @@ def find_id_by_path(json_data, target_namespace, current_namespace=""):
     return None
 
 
-def suite_to_script(suite: dict) -> str:
+def suite_to_script(suite: dict, is_overwriting: bool) -> str:
     # TODO: The import line is still **HARD-CODED** for the upload folder. Might do smth about it later?
     # Importing UPLOAD_FOLDER from `src.main` will cause a circular import.
     module_path = suite["module_path"].replace("/", ".").removesuffix(".py")
@@ -480,44 +482,51 @@ def suite_to_script(suite: dict) -> str:
 
     test_cases = suite["test_cases"]
 
-    test_script = f"""
+    test_script = ""
+
+    if not is_overwriting:
+        test_script += f"""
 import pytest
 from {module_path} import {object_name}
-    """
+        """
 
+    constant = 100 if is_overwriting else 0
     for i, case in enumerate(test_cases):
         test_args = case["test_args"]
         exception = case["exception"]
         return_value = case["return_value"]
 
         test_script += f"""
-def test_{i}():
+def test_{i + constant}():
         """
 
         if exception:
             test_script += f"""
     with pytest.raises({exception}):
-        {object_name}({', '.join(map(str, test_args.values()))})
+        {object_name}({', '.join(f'"{v}"' if isinstance(v, str) else str(v) for v in test_args.values())})
         """
         else:
             test_script += f"""
-    assert {object_name}({', '.join(map(str, test_args.values()))}) == {return_value}
+    assert {object_name}({', '.join(f'"{v}"' if isinstance(v, str) else str(v) for v in test_args.values())}) == {return_value}
         """
 
     output_dir = 'uploads/' + suite["module_path"].split('/')[0] + '/tests'
     # TODO: `script_file_name` should be more specific but whatever.
     # script_file_name = f"test_{suite['module_path'].replace('/', '.').removesuffix('.py')}.{object_name}.py"
     script_file_name = f"{object_name}_test.py"
-    save_test_script(test_script, script_file_name, output_dir)
+    # print(test_script)
+    save_test_script(test_script, script_file_name, output_dir, is_overwriting)
 
     return test_script
 
 
-def save_test_script(script: str, script_file_name: str, output_dir: str) -> None:
+def save_test_script(script: str, script_file_name: str, output_dir: str, is_overwriting: bool) -> None:
     os.makedirs(output_dir, exist_ok=True)
-    print(output_dir)
 
-    with open(f"{output_dir}/{script_file_name}", "w") as f:
+    option = 'a' if is_overwriting else 'w'
+    with open(f"{output_dir}/{script_file_name}", option) as f:
         f.write(script)
 
-    print(f"Test script saved to {output_dir} as {script_file_name}")
+    action = 'appended' if is_overwriting else 'saved'
+
+    print(f"Test script {action} to {output_dir} as {script_file_name}")
