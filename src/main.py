@@ -5,6 +5,7 @@ import shutil
 import zipfile
 import shutil
 import hashlib
+import time
 from asyncio import start_server
 from contextlib import nullcontext
 
@@ -13,6 +14,7 @@ from json import JSONDecoder
 
 from pathlib import Path
 
+from distlib.util import path_to_cache_dir
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, UploadFile
@@ -307,6 +309,8 @@ async def get_dependencies_code(repo_name: str, function_id: str):
 
 @app.get("/ai-gen-test")
 async def ai_gen_test(repo_name: str, function_id: str):
+    start_time = time.time()
+
     main_code = await get_code(repo_name, function_id)
     dependency_code = await get_dependencies_code(repo_name, function_id)
 
@@ -318,21 +322,42 @@ async def ai_gen_test(repo_name: str, function_id: str):
     info = await get_json_element_info(repo_name, function_id)
 
     first_response = reformat_gpt_response(first_result, info['file_path'], False)
-    first_response['function_id'] = function_id
+
+    path_to_file = info['metadata']['absolute_path_to_file']
+
+    with open(path_to_file, 'r', encoding='utf-8') as file:
+        file_content = file.read()
+
+
+    first_response['file_content'] = file_content
     missed_lines = first_response['missed_lines']
 
-    if missed_lines != "NONE":
+    print("------------METADATA AND MISSED LINES:-------------")
+    print(info['metadata'], missed_lines)
+    print("---------------------------------------------------")
+    calculated_result = calculate_function_coverage(info['metadata'], missed_lines)
+    print(calculated_result)
+    func_cov_score, covered_lines_in_func, missed_lines_in_func = calculated_result
 
-        next_result = await loop.run_in_executor(
-            executor, regenerate_test_with_ai, main_code, dependency_code, missed_lines
-        )
+    first_response['covered_lines'] = covered_lines_in_func
+    first_response['missed_lines'] = missed_lines_in_func
+    first_response['func_coverage'] = func_cov_score
 
+    # if missed_lines != "NONE":
+    #
+    #     next_result = await loop.run_in_executor(
+    #         executor, regenerate_test_with_ai, main_code, dependency_code, missed_lines
+    #     )
+    #
+    #
+    #     next_response = reformat_gpt_response(next_result, info['file_path'], True)
+    #     next_response['function_id'] = function_id
+    #     print(f"COVERAGE BEFORE: {first_response['coverage']}")
+    #     print(f"COVERAGE AFTER: {next_response['coverage']}")
+    #
+    #     return next_response
 
-        next_response = reformat_gpt_response(next_result, info['file_path'], True)
-        next_response['function_id'] = function_id
-        print(f"COVERAGE BEFORE: {first_response['coverage']}")
-        print(f"COVERAGE AFTER: {next_response['coverage']}")
-
-        return next_response
+    end_time = time.time()
+    first_response['execution_time'] = round(end_time - start_time, 5)
 
     return first_response

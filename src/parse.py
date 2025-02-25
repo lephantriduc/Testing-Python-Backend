@@ -530,3 +530,32 @@ def save_test_script(script: str, script_file_name: str, output_dir: str, is_ove
     action = 'appended' if is_overwriting else 'saved'
 
     print(f"Test script {action} to {output_dir} as {script_file_name}")
+
+
+def calculate_function_coverage(metadata, missed_lines_str) -> (float, list, list):
+    if missed_lines_str == "NONE":
+        return 100, [], []
+
+    first, last = metadata["first"], metadata["last"]
+    #does not count the first "def" line
+    total_lines = last - first
+
+    missed_lines = set()
+    for part in missed_lines_str.split(", "):
+        if "-" in part:
+            start, end = map(int, part.split("-"))
+            missed_lines.update(range(start, end + 1))
+        else:
+            missed_lines.add(int(part))
+
+    covered_in_function, missed_in_function = [], []
+    for line in range(first + 1, last + 1): # Skip the first "def" line
+        if line not in missed_lines:
+            covered_in_function.append(line)
+        else:
+            missed_in_function.append(line)
+
+    covered_lines = len(covered_in_function)
+    coverage = (covered_lines / total_lines) * 100
+
+    return round(coverage, 2), covered_in_function, missed_in_function

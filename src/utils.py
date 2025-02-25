@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from sphinx.util.rst import textwidth
 from twisted.logger import capturedLogs
 
-from src.parse import suite_to_script
+from src.parse import suite_to_script, calculate_function_coverage
 from src.testsuite import *
 
 load_dotenv()
@@ -142,8 +142,9 @@ def reformat_gpt_response(suite: TestSuite, module_path: str, is_overwriting: bo
     # print(repo_name, path_to_file)
     # print(subprocess.run(["pwd"], capture_output=True, text=True))
     cov_score, missed_lines = run_coverage_and_get_results(repo_name, path_to_file)
-    res['coverage'] = cov_score
+    # res['coverage'] = cov_score
     res['missed_lines'] = missed_lines.rstrip()
+
 
     return res
 
