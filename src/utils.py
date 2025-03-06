@@ -161,24 +161,29 @@ def run_coverage_and_get_results(repo_name, file_path):
     if os.path.exists(coverage_file):
         os.remove(coverage_file)
 
-    subprocess.run(["coverage", "run", "-m", "pytest", "tests/"], cwd=tests_dir)
+    print(subprocess.run(['pwd'], cwd=tests_dir))
+    subprocess.run(["coverage", "run", "-m", "pytest", "tests"], cwd=tests_dir)
     coverage_report = subprocess.run(["coverage", "report", "-m"], cwd=tests_dir, capture_output=True, text=True)
 
     with open(f"{tests_dir}/tests/coverage.log", "w") as f:
         f.write(str(coverage_report.stdout))
 
+    # print(file_path)
+    # print(tests_dir)
     cov_result = subprocess.run(["awk", f'$1 == "{file_path}" {{if (NF > 4) print $4, substr($0, index($0, $5)); else print $4, "NONE"}}', "coverage.log"], cwd=f"{tests_dir}/tests",
                             capture_output=True, text=True).stdout
+    print(cov_result)
     cov_score, missed_lines = cov_result.split(maxsplit=1)
 
     return cov_score, missed_lines
 
 
 if __name__ == "__main__":
-    file_path = "src/__init__.py"
+    file_path = "src/colleso.py"
     repo_name = "examples"
     tests_dir = f"../uploads/{repo_name}"
     result = subprocess.run(["awk", f'$1 == "{file_path}" {{if (NF > 4) print $4, substr($0, index($0, $5)); else print $4, "NONE"}}', "coverage.log"], cwd=f"{tests_dir}/tests",
                    capture_output=True, text=True).stdout
-    cov_score, missed_lines = result.split(maxsplit=1)
-    print(cov_score, missed_lines, sep='\n')
+    print(result)
+    # cov_score, missed_lines = result.split(maxsplit=1)
+    # print(cov_score, missed_lines, sep='\n')

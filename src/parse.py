@@ -559,3 +559,13 @@ def calculate_function_coverage(metadata, missed_lines_str) -> (float, list, lis
     coverage = (covered_lines / total_lines) * 100
 
     return round(coverage, 2), covered_in_function, missed_in_function
+
+def edges_to_DOT(edges_dict: dict) -> str:
+    dot_result = "digraph G {\n"
+    for list_of_edges in edges_dict.values():
+        for caller, callee in list_of_edges:
+            dot_result += f'"{caller}" -> "{callee}";\n'
+    dot_result += "}"
+
+
+    return dot_result

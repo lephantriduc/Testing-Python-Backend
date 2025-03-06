@@ -22,6 +22,300 @@
       "children": []
     },
     {
+      "id": "7679fb7c780822d085c87b7f6f6202bb",
+      "name": ".pytest_cache",
+      "type": "folder",
+      "full_path": "examples/.pytest_cache",
+      "ext": ".",
+      "children": [
+        {
+          "id": "0759d82c1c32379f9ee2017e636835c4",
+          "name": "CACHEDIR.TAG",
+          "type": "file",
+          "full_path": "examples/.pytest_cache/CACHEDIR.TAG",
+          "ext": ".TAG",
+          "children": []
+        },
+        {
+          "id": "c4fc335a9309593971f93d91b0841fe0",
+          "name": "README.md",
+          "type": "file",
+          "full_path": "examples/.pytest_cache/README.md",
+          "ext": ".md",
+          "children": []
+        },
+        {
+          "id": "f1ed9e038ef2e33b77a2126efc3b89c4",
+          "name": ".gitignore",
+          "type": "file",
+          "full_path": "examples/.pytest_cache/.gitignore",
+          "ext": ".gitignore",
+          "children": []
+        },
+        {
+          "id": "8480c59d37ab09c215bbf9e6664a26d9",
+          "name": "v",
+          "type": "folder",
+          "full_path": "examples/.pytest_cache/v",
+          "ext": ".",
+          "children": [
+            {
+              "id": "b2bc2b5340a7ceb6cbe4345c7a5a168c",
+              "name": "cache",
+              "type": "folder",
+              "full_path": "examples/.pytest_cache/v/cache",
+              "ext": ".",
+              "children": [
+                {
+                  "id": "ccf7b4a5fec37a93b0ae7d2146377ba4",
+                  "name": "nodeids",
+                  "type": "file",
+                  "full_path": "examples/.pytest_cache/v/cache/nodeids",
+                  "ext": "",
+                  "children": []
+                },
+                {
+                  "id": "78c951a75e746b4539120dd35d785185",
+                  "name": "lastfailed",
+                  "type": "file",
+                  "full_path": "examples/.pytest_cache/v/cache/lastfailed",
+                  "ext": "",
+                  "children": []
+                },
+                {
+                  "id": "802079f5da78316432471ac6a71faba7",
+                  "name": "stepwise",
+                  "type": "file",
+                  "full_path": "examples/.pytest_cache/v/cache/stepwise",
+                  "ext": "",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fa6b17a23a5070d91b0a4fafefdd2a0a",
+      "name": ".coverage",
+      "type": "file",
+      "full_path": "examples/.coverage",
+      "ext": ".coverage",
+      "children": []
+    },
+    {
+      "id": "ee427e8a73e5c2c8e4b2613b2eea8e3f",
+      "name": "tests",
+      "type": "folder",
+      "full_path": "examples/tests",
+      "ext": ".",
+      "children": [
+        {
+          "id": "b03eb89d66607a975694f61e39703ce2",
+          "name": "coverage.log",
+          "type": "file",
+          "full_path": "examples/tests/coverage.log",
+          "ext": ".log",
+          "children": []
+        },
+        {
+          "id": "fd6a48421deaf76b5b3f8144ba899992",
+          "name": "__init__.py",
+          "type": "file",
+          "full_path": "examples/tests/__init__.py",
+          "ext": ".py",
+          "children": []
+        },
+        {
+          "id": "c23f4d482b1eb4e2eb8d33a1ee63f980",
+          "name": "__pycache__",
+          "type": "folder",
+          "full_path": "examples/tests/__pycache__",
+          "ext": ".",
+          "children": [
+            {
+              "id": "6c2b4c4db016e4311f89886c848a3691",
+              "name": "untyped_list_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/untyped_list_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "df526d186a616ccab6cfbcec7107f830",
+              "name": "list_union_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/list_union_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "d316ae9063a6079622bce06edf23c28d",
+              "name": "compute_area_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/compute_area_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "067bab34c4f3b50f922aa81f89ff16f4",
+              "name": "difficult_branches_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/difficult_branches_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "7db7a39ba96ba445456859ca8639ebfd",
+              "name": "nested_list_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/nested_list_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "f7dcdca2f0dc1499b2d8e84fa51f27cf",
+              "name": "test_function_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/test_function_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "59ef7e918b8999a4897cfc015b76f756",
+              "name": "untyped_tuple_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/untyped_tuple_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "78bab2196e73999821af0df8386c358b",
+              "name": "z_func_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/z_func_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "fee69135587df3f397617e8fe712e0ad",
+              "name": "calculate_discount_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/calculate_discount_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "65a6f126df002534e1ab223201c99e8b",
+              "name": "nested_no_param_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/nested_no_param_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "3b99920138bc1e70b4db60b674e15e4b",
+              "name": "_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "2e04f1764fffd50b5dc98a2568658253",
+              "name": "check_tuple_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/check_tuple_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "463f78efcec2da5d0ae5b116390bb46b",
+              "name": "gcd_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/gcd_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "843e3dd268f2632103e1c30601d15ad5",
+              "name": "foo_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/foo_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "9f4ef1739532d1f00e8920b7208acb72",
+              "name": "divisible_by_32_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/divisible_by_32_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "0e5996001f688725f895662087afb034",
+              "name": "str_splitter_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/str_splitter_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "c35a4b253170a584a86fa5639be09264",
+              "name": "sample_function_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/sample_function_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "9be05df5194730cf2aea41b6d4929388",
+              "name": "dict_str_int_test.cpython-310-pytest-7.2.2.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/dict_str_int_test.cpython-310-pytest-7.2.2.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "171d7bce015e134d29f202d14a51528b",
+              "name": "__init__.cpython-310.pyc",
+              "type": "file",
+              "full_path": "examples/tests/__pycache__/__init__.cpython-310.pyc",
+              "ext": ".pyc",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dfeb174403e8bbb08bcb9742f90fb0f1",
+      "name": "__init__.py",
+      "type": "file",
+      "full_path": "examples/__init__.py",
+      "ext": ".py",
+      "children": []
+    },
+    {
+      "id": "1051cf97995dc433187585ade9a4f3a5",
+      "name": "__pycache__",
+      "type": "folder",
+      "full_path": "examples/__pycache__",
+      "ext": ".",
+      "children": [
+        {
+          "id": "730b3ba1acc269858bcd3032b63f9ddb",
+          "name": "__init__.cpython-310.pyc",
+          "type": "file",
+          "full_path": "examples/__pycache__/__init__.cpython-310.pyc",
+          "ext": ".pyc",
+          "children": []
+        }
+      ]
+    },
+    {
       "id": "142b38891d3da95a45f01f6d585339f7",
       "name": "main.py",
       "type": "file",
@@ -99,20 +393,43 @@
           ]
         },
         {
-          "id": "4a56cbdf1314984b6e11996f078d556f",
-          "name": "z_func.py",
-          "type": "file",
-          "full_path": "examples/src/z_func.py",
-          "ext": ".py",
+          "id": "e395b02a860010ca5fd8eeffd4b131ec",
+          "name": "__pycache__",
+          "type": "folder",
+          "full_path": "examples/src/__pycache__",
+          "ext": ".",
           "children": [
             {
-              "id": "04dddc6d1a8ec480fcff5b622b145f0f",
-              "name": "z_func",
-              "absolute_path_to_file": "./uploads/examples/src/z_func.py",
-              "type": ":function",
-              "first": 1,
-              "last": 16,
-              "children": {}
+              "id": "336e4fa76784edc10dde4e8db8a0635a",
+              "name": "difficult.cpython-310.pyc",
+              "type": "file",
+              "full_path": "examples/src/__pycache__/difficult.cpython-310.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "aff6da6a9be183bfe980817e4708f8f1",
+              "name": "param.cpython-310.pyc",
+              "type": "file",
+              "full_path": "examples/src/__pycache__/param.cpython-310.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "9fcb3a8d5cdcb8539a7b19faefa93ba7",
+              "name": "colleso.cpython-310.pyc",
+              "type": "file",
+              "full_path": "examples/src/__pycache__/colleso.cpython-310.pyc",
+              "ext": ".pyc",
+              "children": []
+            },
+            {
+              "id": "24bea50c92722e7ceffb0b59241f4e40",
+              "name": "__init__.cpython-310.pyc",
+              "type": "file",
+              "full_path": "examples/src/__pycache__/__init__.cpython-310.pyc",
+              "ext": ".pyc",
+              "children": []
             }
           ]
         },

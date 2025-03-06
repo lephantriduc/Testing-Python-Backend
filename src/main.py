@@ -31,6 +31,7 @@ from src.parse import *
 from src.utils import *
 from pydantic import BaseModel
 
+from uploads.sorts.topological_sort import edges
 
 app = FastAPI()
 executor = ThreadPoolExecutor(max_workers=10)
@@ -121,6 +122,12 @@ async def get_dependency_edges(repo_name: str):
 
     call_edges, import_edges = dependency_analysis(file_paths, project_path)
     return {'call_edges': call_edges, 'import_edges': import_edges}
+
+@app.get("/get-dependency-analysis-visualize-script/")
+async def get_dependency_analysis_visualize_script(repo_name: str):
+    result = await get_dependency_edges(repo_name)
+    return edges_to_DOT(result)
+
 
 
 @app.get("/get-file/")
