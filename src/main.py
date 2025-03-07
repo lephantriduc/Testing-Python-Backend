@@ -4,6 +4,7 @@ import asyncio
 import shutil
 import zipfile
 import shutil
+import graphviz
 import hashlib
 import time
 from asyncio import start_server
@@ -126,7 +127,12 @@ async def get_dependency_edges(repo_name: str):
 @app.get("/get-dependency-analysis-visualize-script/")
 async def get_dependency_analysis_visualize_script(repo_name: str):
     result = await get_dependency_edges(repo_name)
-    return edges_to_DOT(result)
+    dot_script = edges_to_DOT(result)
+
+    dot = graphviz.Source(dot_script)
+    dot.render("dot_output", directory=f"uploads/{repo_name}/images", format="png", view=True)
+
+    return dot_script
 
 
 
